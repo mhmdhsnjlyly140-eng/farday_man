@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'game/shop_game.dart'; // این مسیر باید دقیقاً همین باشه
+import 'game/shop_game.dart'; 
 
-// 👇 این همون تابع اصلیه که خطا میده نیستش!
 void main() {
   runApp(const FardayeManApp());
 }
@@ -42,6 +41,8 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 👇 اینجا رنگ پس‌زمینه کل صفحه رو تعیین می‌کنیم
+      backgroundColor: const Color(0xFF2C3E50), 
       body: Stack(
         children: [
           GameWidget(game: _game),
@@ -52,14 +53,12 @@ class _GameScreenState extends State<GameScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // دکمه چپ
                 GestureDetector(
                   onTapDown: (_) => _game.player.moveLeft = true,
                   onTapUp: (_) => _game.player.moveLeft = false,
                   onTapCancel: () => _game.player.moveLeft = false,
                   child: _buildControlButton(Icons.arrow_back_ios_new_rounded),
                 ),
-                // دکمه راست
                 GestureDetector(
                   onTapDown: (_) => _game.player.moveRight = true,
                   onTapUp: (_) => _game.player.moveRight = false,
