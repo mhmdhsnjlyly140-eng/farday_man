@@ -1,5 +1,5 @@
-name: my_3d_engine
-description: A personal 3D engine built with Flutter
+name: fardaye_man
+description: "بازی فردای من"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,12 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  webview_flutter: ^4.7.0
+  flame: ^1.18.0 # آخرین نسخه پایدار Flame
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
