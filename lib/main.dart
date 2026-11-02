@@ -1,97 +1,61 @@
+import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import 'package:flame/game.dart';
-import 'game/shop_game.dart'; // این مسیر درست است
 
-void main() {
-  runApp(const FardayeManApp());
-}
+class Player extends PositionComponent {
+  double speed = 200.0; 
+  bool moveLeft = false;
+  bool moveRight = false;
+  bool isMoving = false;
 
-class FardayeManApp extends StatelessWidget {
-  const FardayeManApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'فردای من',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-      ),
-      home: const GameScreen(),
-    );
-  }
-}
-
-class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  Player() : super(size: Vector2(50, 50), anchor: Anchor.bottomCenter);
 
   @override
-  State<GameScreen> createState() => _GameScreenState();
-}
+  void update(double dt) {
+    super.update(dt);
+    
+    double direction = 0;
+    if (moveLeft) direction -= 1;
+    if (moveRight) direction += 1;
 
-class _GameScreenState extends State<GameScreen> {
-  late ShopGame _game;
-
-  @override
-  void initState() {
-    super.initState();
-    _game = ShopGame();
+    if (direction != 0) {
+      position.x += direction * speed * dt;
+      isMoving = true;
+      
+      if (position.x < size.x / 2) {
+        position.x = size.x / 2;
+      }
+    } else {
+      isMoving = false;
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // موتور بازی Flame
-          GameWidget(game: _game),
-          
-          // دکمه‌های کنترل روی صفحه
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // دکمه چپ
-                GestureDetector(
-                  onTapDown: (_) => _game.player.moveLeft = true,
-                  onTapUp: (_) => _game.player.moveLeft = false,
-                  onTapCancel: () => _game.player.moveLeft = false,
-                  child: _buildControlButton(Icons.arrow_back_ios_new_rounded),
-                ),
-                
-                // دکمه راست
-                GestureDetector(
-                  onTapDown: (_) => _game.player.moveRight = true,
-                  onTapUp: (_) => _game.player.moveRight = false,
-                  onTapCancel: () => _game.player.moveRight = false,
-                  child: _buildControlButton(Icons.arrow_forward_ios_rounded),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  void render(Canvas canvas) {
+    super.render(canvas);
 
-  // ظاهر دکمه‌ها
-  Widget _buildControlButton(IconData icon) {
-    return Container(
-      width: 70,
-      height: 70,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white24, width: 2),
+    final paint = Paint()
+      ..color = isMoving ? Colors.blueAccent : Colors.blue;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(5, 10, size.x - 10, size.y - 10),
+        const Radius.circular(15),
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 35,
-      ),
+      paint,
     );
+
+    canvas.drawCircle(
+      Offset(size.x / 2, 5),
+      10,
+      Paint()..color = Colors.orangeAccent,
+    );
+    
+    final eyePaint = Paint()..color = Colors.black;
+    double eyeOffset = 0;
+    if (moveLeft) eyeOffset = -3;
+    if (moveRight) eyeOffset = 3;
+    
+    canvas.drawCircle(Offset((size.x / 2) - 4 + eyeOffset, 3), 2, eyePaint);
+    canvas.drawCircle(Offset((size.x / 2) + 4 + eyeOffset, 3), 2, eyePaint);
   }
 }
