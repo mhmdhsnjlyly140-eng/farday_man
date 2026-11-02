@@ -1,129 +1,97 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flame/game.dart';
+import 'game/shop_game.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const FardayeManApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FardayeManApp extends StatelessWidget {
+  const FardayeManApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'My 3D Engine',
+    return MaterialApp(
+      title: 'فردای من',
       debugShowCheckedModeBanner: false,
-      home: EngineScreen(),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+      ),
+      home: const GameScreen(),
     );
   }
 }
 
-class EngineScreen extends StatefulWidget {
-  const EngineScreen({super.key});
+class GameScreen extends StatefulWidget {
+  const GameScreen({super.key});
 
   @override
-  State<EngineScreen> createState() => _EngineScreenState();
+  State<GameScreen> createState() => _GameScreenState();
 }
 
-class _EngineScreenState extends State<EngineScreen> {
-  late final WebViewController _controller;
+class _GameScreenState extends State<GameScreen> {
+  late ShopGame _game;
 
   @override
   void initState() {
     super.initState();
-    
-    // کد HTML سه‌بعدی (همون کدی که توی فاز ۳ نوشتیم)
-    const String htmlContent = '''
-<!DOCTYPE html>
-<html lang="fa">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    body { margin: 0; overflow: hidden; touch-action: none; }
-    canvas { display: block; }
-    #ui { position: fixed; top: 10px; left: 10px; z-index: 100; display: flex; gap: 6px; }
-    #ui button { padding: 8px 12px; border: none; border-radius: 6px; background: #4fc3f7; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div id="ui">
-    <button onclick="addCube()">🧊 مکعب</button>
-  </div>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(5, 5, 8);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7);
-    scene.add(light);
-    
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(30, 30),
-      new THREE.MeshStandardMaterial({ color: 0x2a2a4a })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
-    
-    window.addCube = function() {
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1, 1),
-        new THREE.MeshStandardMaterial({ color: 0x4fc3f7 })
-      );
-      cube.position.set((Math.random() - 0.5) * 4, 0.5, (Math.random() - 0.5) * 4);
-      scene.add(cube);
-    };
-    
-    addCube();
-    
-    const clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-    
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
-</body>
-</html>
-''';
-
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadHtmlString(htmlContent);
+    _game = ShopGame();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: WebViewWidget(controller: _controller),
+      body: Stack(
+        children: [
+          // موتور بازی Flame
+          GameWidget(game: _game),
+          
+          // دکمه‌های کنترل روی صفحه
+          Positioned(
+            bottom: 30,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // دکمه چپ (نگه دار تا راه بره)
+                GestureDetector(
+                  onTapDown: (_) => _game.player.moveLeft = true,
+                  onTapUp: (_) => _game.player.moveLeft = false,
+                  onTapCancel: () => _game.player.moveLeft = false,
+                  child: _buildControlButton(Icons.arrow_back_ios_new_rounded),
+                ),
+                
+                // دکمه راست (نگه دار تا راه بره)
+                GestureDetector(
+                  onTapDown: (_) => _game.player.moveRight = true,
+                  onTapUp: (_) => _game.player.moveRight = false,
+                  onTapCancel: () => _game.player.moveRight = false,
+                  child: _buildControlButton(Icons.arrow_forward_ios_rounded),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ظاهر دکمه‌ها
+  Widget _buildControlButton(IconData icon) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white24, width: 2),
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 35,
+      ),
     );
   }
 }
