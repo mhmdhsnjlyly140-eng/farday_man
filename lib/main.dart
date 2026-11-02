@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'game/shop_game.dart';
+import 'game/shop_game.dart'; // این مسیر درست است
 
 void main() {
   runApp(const FardayeManApp());
@@ -54,7 +54,7 @@ class _GameScreenState extends State<GameScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // دکمه چپ (نگه دار تا راه بره)
+                // دکمه چپ
                 GestureDetector(
                   onTapDown: (_) => _game.player.moveLeft = true,
                   onTapUp: (_) => _game.player.moveLeft = false,
@@ -62,7 +62,7 @@ class _GameScreenState extends State<GameScreen> {
                   child: _buildControlButton(Icons.arrow_back_ios_new_rounded),
                 ),
                 
-                // دکمه راست (نگه دار تا راه بره)
+                // دکمه راست
                 GestureDetector(
                   onTapDown: (_) => _game.player.moveRight = true,
                   onTapUp: (_) => _game.player.moveRight = false,
