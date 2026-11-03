@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 👈 اضافه شد برای چرخش صفحه
+import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'game/shop_game.dart';
-import 'story_screen.dart';
-import 'game_state.dart';
+import 'story_screen.dart'; // این فایل باید ساخته بشه
+import 'game_state.dart';  // این فایل باید ساخته بشه
 
 void main() {
-  // 👈 این خط بازی رو مجبور می‌کنه همیشه افقی باشه
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  
-  // 👈 این خط هم نوارهای بالای گوشی (باتری و...) رو مخفی می‌کنه تا بازی تمام‌صفحه باشه
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   runApp(const FardayeManApp());
@@ -63,9 +60,8 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
           
-          // نوار بالای صفحه (نمایش پول)
           Positioned(
-            top: 20, // چون افقی شده، فاصله رو کمتر کردیم
+            top: 20,
             right: 20,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
@@ -91,7 +87,6 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
 
-          // دکمه‌های حرکت (برای حالت افقی فاصله‌ها رو تنظیم کردیم)
           Positioned(
             bottom: 20,
             left: 30,
