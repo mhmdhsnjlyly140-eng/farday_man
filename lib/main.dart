@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 👈 اضافه شد برای چرخش صفحه
 import 'package:flame/game.dart';
-import 'game/shop_game.dart'; 
+import 'game/shop_game.dart';
+import 'story_screen.dart';
+import 'game_state.dart';
 
 void main() {
+  // 👈 این خط بازی رو مجبور می‌کنه همیشه افقی باشه
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+  
+  // 👈 این خط هم نوارهای بالای گوشی (باتری و...) رو مخفی می‌کنه تا بازی تمام‌صفحه باشه
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
   runApp(const FardayeManApp());
 }
 
@@ -14,10 +27,12 @@ class FardayeManApp extends StatelessWidget {
     return MaterialApp(
       title: 'فردای من',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-      ),
-      home: const GameScreen(),
+      theme: ThemeData(brightness: Brightness.dark),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const StoryScreen(),
+        '/game': (context) => const GameScreen(),
+      },
     );
   }
 }
@@ -31,25 +46,56 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
+  final gameState = GameState();
 
   @override
   void initState() {
     super.initState();
     _game = ShopGame();
+    gameState.money += 50; 
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 👇 اینجا رنگ پس‌زمینه کل صفحه رو تعیین می‌کنیم
-      backgroundColor: const Color(0xFF2C3E50), 
+      backgroundColor: const Color(0xFF2C3E50),
       body: Stack(
         children: [
           GameWidget(game: _game),
+          
+          // نوار بالای صفحه (نمایش پول)
           Positioned(
-            bottom: 30,
-            left: 20,
+            top: 20, // چون افقی شده، فاصله رو کمتر کردیم
             right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber, width: 2),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${gameState.money}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // دکمه‌های حرکت (برای حالت افقی فاصله‌ها رو تنظیم کردیم)
+          Positioned(
+            bottom: 20,
+            left: 30,
+            right: 30,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -82,11 +128,7 @@ class _GameScreenState extends State<GameScreen> {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white24, width: 2),
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 35,
-      ),
+      child: Icon(icon, color: Colors.white, size: 35),
     );
   }
 }
