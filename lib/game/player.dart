@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
-class Player extends PositionComponent with HasGameReference<ShopGame> {
+class Player extends PositionComponent {
   double speed = 150.0;
   bool moveLeft = false;
   bool moveRight = false;
@@ -15,7 +15,7 @@ class Player extends PositionComponent with HasGameReference<ShopGame> {
 
   @override
   Future<void> onLoad() async {
-    // 👈 اصلاح شد: به جای game.images از game.images استفاده می‌کنیم (با HasGameReference)
+    // در نسخه جدید Flame، برای لود عکس‌ها از داخل کامپوننت باید به این شکل عمل کنیم
     final walkImages = [
       await game.images.load('arian_walk_1.png'),
       await game.images.load('arian_walk_2.png'),
@@ -35,9 +35,9 @@ class Player extends PositionComponent with HasGameReference<ShopGame> {
       anchor: Anchor.bottomCenter,
     );
     
-    // 👈 اصلاح شد: به جای playing از pause() استفاده می‌کنیم
+    // 👈 راه حل جدید: به جای pause() و resume()، از تنظیم سرعت استفاده می‌کنیم
     animationComponent.animation = walkAnimation;
-    animationComponent.animation!.pause(); 
+    animationComponent.animationSpeed = 0; // سرعت صفر یعنی متوقف
     
     add(animationComponent);
   }
@@ -57,8 +57,8 @@ class Player extends PositionComponent with HasGameReference<ShopGame> {
       if (position.x < 100) position.x = 100;
       if (position.x > 700) position.x = 700;
 
-      // 👈 اصلاح شد: از resume() برای پخش استفاده می‌کنیم
-      animationComponent.animation!.resume();
+      // 👈 سرعت انیمیشن رو 1 می‌کنیم تا راه بره
+      animationComponent.animationSpeed = 1; 
 
       if (direction < 0) {
         animationComponent.scale.x = -1;
@@ -68,9 +68,8 @@ class Player extends PositionComponent with HasGameReference<ShopGame> {
 
     } else {
       isMoving = false;
-      // 👈 اصلاح شد: از pause() برای توقف استفاده می‌کنیم
-      animationComponent.animation!.pause();
-      animationComponent.animation!.reset(); // برگشت به فریم اول
+      // 👈 سرعت انیمیشن رو صفر می‌کنیم تا وایسه
+      animationComponent.animationSpeed = 0;
     }
   }
 }
