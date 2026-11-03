@@ -11,7 +11,7 @@ class ShopGame extends FlameGame {
     // ابعاد افقی
     camera.viewfinder.visibleGameSize = Vector2(800, 400);
 
-    // لود کردن عکس مغازه
+    // 1. لود کردن عکس مغازه
     try {
       final bgImage = await images.load('shop_bg.png');
       final background = SpriteComponent(
@@ -29,8 +29,16 @@ class ShopGame extends FlameGame {
       ));
     }
 
-    // اضافه کردن آرین
-    player = Player();
+    // 2. لود کردن عکس‌های راه رفتن آرین (همه اینجا)
+    final walkSprites = [
+      Sprite(await images.load('arian_walk_1.png')),
+      Sprite(await images.load('arian_walk_2.png')),
+      Sprite(await images.load('arian_walk_3.png')),
+      Sprite(await images.load('arian_walk_4.png')),
+    ];
+
+    // 3. ساخت آرین و دادن عکس‌ها بهش
+    player = Player(walkSprites);
     player.position = Vector2(400, 380); 
     player.priority = 5;
     world.add(player);
