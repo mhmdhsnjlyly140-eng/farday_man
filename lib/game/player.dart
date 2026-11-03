@@ -1,61 +1,73 @@
 import 'package:flame/components.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class Player extends PositionComponent {
-  double speed = 200.0; 
+  double speed = 150.0;
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
 
-  Player() : super(size: Vector2(50, 50), anchor: Anchor.bottomCenter);
+  late SpriteAnimationComponent animationComponent;
+  late SpriteAnimation walkAnimation;
+
+  // سایز آرین (برای افقی کمی بزرگترش کردیم)
+  Player() : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter);
+
+  @override
+  Future<void> onLoad() async {
+    final walkImages = [
+      await game.images.load('arian_walk_1.png'),
+      await game.images.load('arian_walk_2.png'),
+      await game.images.load('arian_walk_3.png'),
+      await game.images.load('arian_walk_4.png'),
+    ];
+
+    walkAnimation = SpriteAnimation.spriteList(
+      walkImages.map((img) => Sprite(img)).toList(),
+      stepTime: 0.15,
+      loop: true,
+    );
+
+    animationComponent = SpriteAnimationComponent(
+      animation: walkAnimation,
+      size: Vector2(140, 230),
+      anchor: Anchor.bottomCenter,
+    );
+    
+    animationComponent.animation = walkAnimation..playing = false;
+    
+    add(animationComponent);
+  }
 
   @override
   void update(double dt) {
     super.update(dt);
-    
+
     double direction = 0;
     if (moveLeft) direction -= 1;
     if (moveRight) direction += 1;
 
     if (direction != 0) {
-      position.x += direction * speed * dt;
       isMoving = true;
+      position.x += direction * speed * dt;
       
-      if (position.x < size.x / 2) {
-        position.x = size.x / 2;
+      // 👈 محدودیت حرکت در عرض 800 (با کمی فاصله از لبه‌ها)
+      if (position.x < 100) position.x = 100;
+      if (position.x > 700) position.x = 700;
+
+      animationComponent.animation = walkAnimation..playing = true;
+
+      if (direction < 0) {
+        animationComponent.scale.x = -1; // چپ
+      } else {
+        animationComponent.scale.x = 1;  // راست
       }
+
     } else {
       isMoving = false;
+      animationComponent.animation = walkAnimation..playing = false;
+      animationComponent.animationTicks = 0; 
     }
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    final paint = Paint()
-      ..color = isMoving ? Colors.blueAccent : Colors.blue;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(5, 10, size.x - 10, size.y - 10),
-        const Radius.circular(15),
-      ),
-      paint,
-    );
-
-    canvas.drawCircle(
-      Offset(size.x / 2, 5),
-      10,
-      Paint()..color = Colors.orangeAccent,
-    );
-    
-    final eyePaint = Paint()..color = Colors.black;
-    double eyeOffset = 0;
-    if (moveLeft) eyeOffset = -3;
-    if (moveRight) eyeOffset = 3;
-    
-    canvas.drawCircle(Offset((size.x / 2) - 4 + eyeOffset, 3), 2, eyePaint);
-    canvas.drawCircle(Offset((size.x / 2) + 4 + eyeOffset, 3), 2, eyePaint);
   }
 }
