@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
-class Player extends PositionComponent {
+class Player extends PositionComponent with HasGameReference<ShopGame> {
   double speed = 150.0;
   bool moveLeft = false;
   bool moveRight = false;
@@ -11,11 +11,11 @@ class Player extends PositionComponent {
   late SpriteAnimationComponent animationComponent;
   late SpriteAnimation walkAnimation;
 
-  // سایز آرین (برای افقی کمی بزرگترش کردیم)
   Player() : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter);
 
   @override
   Future<void> onLoad() async {
+    // 👈 اصلاح شد: به جای game.images از game.images استفاده می‌کنیم (با HasGameReference)
     final walkImages = [
       await game.images.load('arian_walk_1.png'),
       await game.images.load('arian_walk_2.png'),
@@ -35,7 +35,9 @@ class Player extends PositionComponent {
       anchor: Anchor.bottomCenter,
     );
     
-    animationComponent.animation = walkAnimation..playing = false;
+    // 👈 اصلاح شد: به جای playing از pause() استفاده می‌کنیم
+    animationComponent.animation = walkAnimation;
+    animationComponent.animation!.pause(); 
     
     add(animationComponent);
   }
@@ -52,22 +54,23 @@ class Player extends PositionComponent {
       isMoving = true;
       position.x += direction * speed * dt;
       
-      // 👈 محدودیت حرکت در عرض 800 (با کمی فاصله از لبه‌ها)
       if (position.x < 100) position.x = 100;
       if (position.x > 700) position.x = 700;
 
-      animationComponent.animation = walkAnimation..playing = true;
+      // 👈 اصلاح شد: از resume() برای پخش استفاده می‌کنیم
+      animationComponent.animation!.resume();
 
       if (direction < 0) {
-        animationComponent.scale.x = -1; // چپ
+        animationComponent.scale.x = -1;
       } else {
-        animationComponent.scale.x = 1;  // راست
+        animationComponent.scale.x = 1;
       }
 
     } else {
       isMoving = false;
-      animationComponent.animation = walkAnimation..playing = false;
-      animationComponent.animationTicks = 0; 
+      // 👈 اصلاح شد: از pause() برای توقف استفاده می‌کنیم
+      animationComponent.animation!.pause();
+      animationComponent.animation!.reset(); // برگشت به فریم اول
     }
   }
 }
