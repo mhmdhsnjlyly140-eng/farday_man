@@ -8,14 +8,12 @@ class ShopGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    // 👈 ابعاد افقی (عرض 800، ارتفاع 400)
-    camera.viewport = FixedResolutionViewport(Vector2(800, 400));
+    // 👈 اصلاح شد: در نسخه جدید Flame دیگه نیازی به FixedResolutionViewport نیست
+    // ما مستقیماً سایز دوربین رو تنظیم می‌کنیم
+    camera.viewfinder.visibleGameSize = Vector2(800, 400);
 
-    // 1. لود کردن عکس مغازه
     try {
       final bgImage = await images.load('shop_bg.png');
-      
-      // چون عکس مغازه افقی و بزرگه، کل صفحه رو پر می‌کنه
       final background = SpriteComponent(
         sprite: Sprite(bgImage),
         size: Vector2(800, 400),
@@ -31,9 +29,7 @@ class ShopGame extends FlameGame {
       ));
     }
 
-    // 2. اضافه کردن آرین
     player = Player();
-    // قرار دادن آرین در وسط و پایین صفحه افقی
     player.position = Vector2(400, 380); 
     player.priority = 5;
     world.add(player);
