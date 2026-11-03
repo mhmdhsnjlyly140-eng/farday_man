@@ -11,33 +11,22 @@ class Player extends PositionComponent {
   late SpriteAnimationComponent animationComponent;
   late SpriteAnimation walkAnimation;
 
-  Player() : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter);
-
-  @override
-  Future<void> onLoad() async {
-    // در نسخه جدید Flame، برای لود عکس‌ها از داخل کامپوننت باید به این شکل عمل کنیم
-    final walkImages = [
-      await game.images.load('arian_walk_1.png'),
-      await game.images.load('arian_walk_2.png'),
-      await game.images.load('arian_walk_3.png'),
-      await game.images.load('arian_walk_4.png'),
-    ];
-
+  // 👈 عکس‌ها رو از بیرون (توی ShopGame) بهش پاس می‌دیم
+  Player(List<Sprite> walkSprites) : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter) {
     walkAnimation = SpriteAnimation.spriteList(
-      walkImages.map((img) => Sprite(img)).toList(),
+      walkSprites,
       stepTime: 0.15,
       loop: true,
     );
+  }
 
+  @override
+  Future<void> onLoad() async {
     animationComponent = SpriteAnimationComponent(
       animation: walkAnimation,
       size: Vector2(140, 230),
       anchor: Anchor.bottomCenter,
     );
-    
-    // 👈 راه حل جدید: به جای pause() و resume()، از تنظیم سرعت استفاده می‌کنیم
-    animationComponent.animation = walkAnimation;
-    animationComponent.animationSpeed = 0; // سرعت صفر یعنی متوقف
     
     add(animationComponent);
   }
@@ -57,8 +46,8 @@ class Player extends PositionComponent {
       if (position.x < 100) position.x = 100;
       if (position.x > 700) position.x = 700;
 
-      // 👈 سرعت انیمیشن رو 1 می‌کنیم تا راه بره
-      animationComponent.animationSpeed = 1; 
+      // پخش انیمیشن
+      animationComponent.animation = walkAnimation;
 
       if (direction < 0) {
         animationComponent.scale.x = -1;
@@ -68,8 +57,9 @@ class Player extends PositionComponent {
 
     } else {
       isMoving = false;
-      // 👈 سرعت انیمیشن رو صفر می‌کنیم تا وایسه
-      animationComponent.animationSpeed = 0;
+      // برای متوقف کردن انیمیشن، فریم رو صفر می‌کنیم
+      animationComponent.animation = walkAnimation;
+      animationComponent.animation!.stepTime = 0; // ترفند متوقف کردن
     }
   }
 }
