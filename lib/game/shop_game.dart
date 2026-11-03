@@ -8,10 +8,10 @@ class ShopGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    // 👈 اصلاح شد: در نسخه جدید Flame دیگه نیازی به FixedResolutionViewport نیست
-    // ما مستقیماً سایز دوربین رو تنظیم می‌کنیم
+    // ابعاد افقی
     camera.viewfinder.visibleGameSize = Vector2(800, 400);
 
+    // لود کردن عکس مغازه
     try {
       final bgImage = await images.load('shop_bg.png');
       final background = SpriteComponent(
@@ -29,6 +29,7 @@ class ShopGame extends FlameGame {
       ));
     }
 
+    // اضافه کردن آرین
     player = Player();
     player.position = Vector2(400, 380); 
     player.priority = 5;
