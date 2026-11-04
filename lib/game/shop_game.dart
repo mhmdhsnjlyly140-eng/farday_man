@@ -5,36 +5,31 @@ import 'player.dart';
 
 class ShopGame extends FlameGame {
   late Player player;
-  bool hasError = false;
-  String errorMessage = "";
 
   @override
   Future<void> onLoad() async {
-    camera.viewfinder.visibleGameSize = Vector2(800, 400);
+    // 👈 این خط جادوییه! سایز بازی رو دقیقاً برابر با سایز صفحه گوشی می‌کنه
+    camera.viewfinder.anchor = Anchor.topLeft; 
 
-    // 1. تلاش برای لود کردن عکس مغازه
+    // 1. لود کردن عکس مغازه
     try {
       final bgImage = await images.load('shop_bg.png');
-      final background = SpriteComponent(
+      // عکس رو به اندازه کل صفحه کش می‌دیم
+      world.add(SpriteComponent(
         sprite: Sprite(bgImage),
-        size: Vector2(800, 400),
+        size: size, // size یعنی کل صفحه گوشی
         position: Vector2(0, 0),
         priority: -10,
-      );
-      world.add(background);
+      ));
     } catch (e) {
-      hasError = true;
-      errorMessage = "عکس shop_bg.png پیدا نشد!";
-      debugPrint("ERROR: $e");
-      
       world.add(RectangleComponent(
-        size: Vector2(800, 400),
+        size: size,
         paint: Paint()..color = const Color(0xFF2C3E50),
         priority: -10,
       ));
     }
 
-    // 2. تلاش برای لود کردن آرین
+    // 2. لود کردن آرین
     try {
       final walkSprites = [
         Sprite(await images.load('arian_walk_1.png')),
@@ -44,13 +39,12 @@ class ShopGame extends FlameGame {
       ];
 
       player = Player(walkSprites);
-      player.position = Vector2(400, 380); 
+      // قرار دادن آرین دقیقاً در وسط پایین صفحه (هر سایزی که باشه)
+      player.position = Vector2(size.x / 2, size.y - 20); 
       player.priority = 5;
       world.add(player);
     } catch (e) {
-      hasError = true;
-      errorMessage = "عکس‌های آرین پیدا نشدند!";
-      debugPrint("ERROR: $e");
+      debugPrint("آرین لود نشد: $e");
     }
   }
 }
