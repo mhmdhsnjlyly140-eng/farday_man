@@ -3,7 +3,7 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class Player extends PositionComponent {
-  double speed = 250.0; // سرعت رو یکم بیشتر کردیم
+  double speed = 250.0; 
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
@@ -26,7 +26,7 @@ class Player extends PositionComponent {
       size: Vector2(140, 230),
       anchor: Anchor.bottomCenter,
     );
-    // در ابتدا انیمیشن متوقف باشه
+    // انیمیشن رو در ابتدا متوقف نگه می‌داریم (سرعت صفر)
     animationComponent.animation!.stepTime = 0; 
     add(animationComponent);
   }
@@ -43,22 +43,25 @@ class Player extends PositionComponent {
       isMoving = true;
       position.x += direction * speed * dt;
       
-      // محدودیت حرکت (با توجه به سایز متغیر صفحه، از لبه‌ها فاصله می‌گیریم)
+      // محدودیت حرکت در صفحه
       final screenWidth = (parent as FlameGame).size.x;
       if (position.x < 70) position.x = 70;
       if (position.x > screenWidth - 70) position.x = screenWidth - 70;
 
-      animationComponent.animation!.stepTime = 0.15; // انیمیشن راه رفتن
+      // پخش انیمیشن راه رفتن
+      animationComponent.animation!.stepTime = 0.15; 
 
+      // چرخش کاراکتر
       if (direction < 0) {
-        animationComponent.scale.x = -1; // چپ
+        animationComponent.scale.x = -1; 
       } else {
-        animationComponent.scale.x = 1;  // راست
+        animationComponent.scale.x = 1;  
       }
 
     } else {
       isMoving = false;
-      animationComponent.animation!.stepTime = 0; // توقف انیمیشن
+      // توقف انیمیشن
+      animationComponent.animation!.stepTime = 0; 
     }
   }
 }
