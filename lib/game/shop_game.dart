@@ -8,16 +8,14 @@ class ShopGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    // 👈 این خط جادوییه! سایز بازی رو دقیقاً برابر با سایز صفحه گوشی می‌کنه
     camera.viewfinder.anchor = Anchor.topLeft; 
 
-    // 1. لود کردن عکس مغازه
+    // 1. عکس مغازه
     try {
       final bgImage = await images.load('shop_bg.png');
-      // عکس رو به اندازه کل صفحه کش می‌دیم
       world.add(SpriteComponent(
         sprite: Sprite(bgImage),
-        size: size, // size یعنی کل صفحه گوشی
+        size: size, 
         position: Vector2(0, 0),
         priority: -10,
       ));
@@ -39,8 +37,8 @@ class ShopGame extends FlameGame {
       ];
 
       player = Player(walkSprites);
-      // قرار دادن آرین دقیقاً در وسط پایین صفحه (هر سایزی که باشه)
-      player.position = Vector2(size.x / 2, size.y - 20); 
+      // آرین رو دقیقاً وسط پایین می‌ذاریم (کمی بالاتر از دکمه‌ها)
+      player.position = Vector2(size.x / 2, size.y - 80); 
       player.priority = 5;
       world.add(player);
     } catch (e) {
