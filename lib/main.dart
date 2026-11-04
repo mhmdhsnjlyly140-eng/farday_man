@@ -1,6 +1,7 @@
+import 'dart:ui' show Matrix4; // 👈 این خط تداخل Matrix4 رو حل می‌کنه
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/scheduler.dart'; // 👈 برای حرکت روان
+import 'package:flutter/scheduler.dart'; 
 import 'package:flame/game.dart';
 import 'game/shop_game.dart';
 import 'story_screen.dart';
@@ -42,7 +43,6 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-// 👈 استفاده از SingleTickerProviderStateMixin برای حرکت 60 فریم بر ثانیه
 class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   late ShopGame _game;
   final gameState = GameState();
@@ -70,30 +70,27 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       });
     });
 
-    // 👈 راه اندازی تیکر (حلقه بازی)
     _ticker = createTicker(_onTick)..start();
   }
 
   @override
   void dispose() {
-    _ticker.dispose(); // خاموش کردن تیکر
+    _ticker.dispose(); 
     super.dispose();
   }
 
-  // این تابع 60 بار در ثانیه اجرا میشه
   void _onTick(Duration elapsed) {
-    final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0; // زمان سپری شده
+    final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0; 
     _lastElapsed = elapsed;
 
     if (!mounted) return;
 
-    // حرکت روان آرین
     if (isMovingLeft || isMovingRight) {
       setState(() {
         isMoving = true;
         if (isMovingLeft) {
           faceLeft = true;
-          arianX -= 300 * dt; // سرعت: 300 پیکسل در ثانیه
+          arianX -= 300 * dt; 
           if (arianX < 80) arianX = 80;
         } else if (isMovingRight) {
           faceLeft = false;
@@ -103,9 +100,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           }
         }
 
-        // تغییر فریم‌های انیمیشن راه رفتن
         _animationTimer += dt;
-        if (_animationTimer >= 0.15) { // هر 0.15 ثانیه عکس عوض میشه
+        if (_animationTimer >= 0.15) { 
           animationFrame = animationFrame == 1 ? 2 : 1;
           _animationTimer = 0;
         }
@@ -114,7 +110,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       if (isMoving) {
         setState(() {
           isMoving = false;
-          animationFrame = 1; // برگشت به حالت ایستاده
+          animationFrame = 1; 
         });
       }
     }
@@ -208,7 +204,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       },
     );
 
-    // 🌟 اعمال فیلتر برای حذف رنگ سفید
     Widget transparentImage = ColorFiltered(
       colorFilter: const ColorFilter.matrix([
         1, 0, 0, 0, 0,
@@ -219,7 +214,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       child: imageWidget,
     );
 
-    // اگه به سمت چپ میره، عکس رو آینه می‌کنیم
     if (faceLeft) {
       return Transform(
         alignment: Alignment.center,
