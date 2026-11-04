@@ -1,4 +1,3 @@
-import 'dart:ui' show Matrix4; // 👈 این خط تداخل Matrix4 رو حل می‌کنه
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart'; 
@@ -189,11 +188,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         ? 'assets/images/arian_walk_${animationFrame == 1 ? 2 : 3}.png' 
         : 'assets/images/arian_walk_1.png';
 
+    // 👈 راه حل ساده و بدون خطا برای آینه کردن عکس (بدون نیاز به Matrix4)
     Widget imageWidget = Image.asset(
       imagePath,
       width: 140,
       height: 230,
       fit: BoxFit.contain,
+      matchTextDirection: faceLeft, // اگر true باشه، عکس آینه میشه
       errorBuilder: (context, error, stackTrace) {
         return Container(
           width: 140,
@@ -204,25 +205,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       },
     );
 
-    Widget transparentImage = ColorFiltered(
-      colorFilter: const ColorFilter.matrix([
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1, 0, 0,
-        0, 0, 0, 1, 0,
-      ]),
-      child: imageWidget,
-    );
-
-    if (faceLeft) {
-      return Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.identity()..scale(-1.0, 1.0, 1.0),
-        child: transparentImage,
-      );
-    }
-    
-    return transparentImage;
+    return imageWidget;
   }
 
   Widget _buildControlButton(IconData icon) {
