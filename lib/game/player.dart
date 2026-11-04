@@ -1,34 +1,47 @@
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
-import 'package:flame/game.dart'; // 👈 این خط باعث رفع خطا میشه
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'shop_game.dart'; // برای دسترسی به عکس‌های بازی
 
-class Player extends PositionComponent {
+class Player extends PositionComponent with HasGameReference<ShopGame> {
   double speed = 250.0; 
   bool moveLeft = false;
   bool moveRight = false;
-  bool isMoving = false;
 
   late SpriteAnimationComponent animationComponent;
   late SpriteAnimation walkAnimation;
 
-  Player(List<Sprite> walkSprites) : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter) {
-    walkAnimation = SpriteAnimation.spriteList(
-      walkSprites,
-      stepTime: 0.15,
-      loop: true,
-    );
-  }
+  Player() : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter);
 
   @override
   Future<void> onLoad() async {
+    // 1. عکس‌ها رو اینجا لود می‌کنیم
+    final walkImages = [
+      await game.images.load('arian_walk_1.png'),
+      await game.images.load('arian_walk_2.png'),
+      await game.images.load('arian_walk_3.png'),
+      await game.images.load('arian_walk_4.png'),
+    ];
+
+    // 2. انیمیشن رو می‌سازیم
+    walkAnimation = SpriteAnimation.spriteList(
+      walkImages.map((img) => Sprite(img)).toList(),
+      stepTime: 0.15,
+      loop: true,
+    );
+
+    // 3. کامپوننت تصویری رو می‌سازیم
     animationComponent = SpriteAnimationComponent(
       animation: walkAnimation,
       size: Vector2(140, 230),
       anchor: Anchor.bottomCenter,
     );
-    // انیمیشن رو در ابتدا متوقف نگه می‌داریم (سرعت صفر)
+    
+    // 4. انیمیشن رو در ابتدا متوقف نگه می‌داریم
     animationComponent.animation!.stepTime = 0; 
+    
+    // 5. اضافه کردن به بازیکن
     add(animationComponent);
   }
 
@@ -41,28 +54,21 @@ class Player extends PositionComponent {
     if (moveRight) direction += 1;
 
     if (direction != 0) {
-      isMoving = true;
       position.x += direction * speed * dt;
       
-      // محدودیت حرکت در صفحه (استفاده از FlameGame که الان ایمپورت شده)
-      final screenWidth = (parent as FlameGame).size.x;
+      // محدودیت حرکت در صفحه
       if (position.x < 70) position.x = 70;
-      if (position.x > screenWidth - 70) position.x = screenWidth - 70;
+      if (position.x > game.size.x - 70) position.x = game.size.x - 70;
 
-      // پخش انیمیشن راه رفتن
-      animationComponent.animation!.stepTime = 0.15; 
-
-      // چرخش کاراکتر
+      animationComponent.animation!.stepTime = 0.15; // راه رفتن
+      
       if (direction < 0) {
-        animationComponent.scale.x = -1; 
+        animationComponent.scale.x = -1;
       } else {
-        animationComponent.scale.x = 1;  
+        animationComponent.scale.x = 1;
       }
-
     } else {
-      isMoving = false;
-      // توقف انیمیشن
-      animationComponent.animation!.stepTime = 0; 
+      animationComponent.animation!.stepTime = 0; // توقف
     }
   }
 }
