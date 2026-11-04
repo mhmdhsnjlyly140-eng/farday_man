@@ -27,22 +27,15 @@ class ShopGame extends FlameGame {
       ));
     }
 
-    // 2. لود کردن آرین
+    // 2. ساخت آرین و اضافه کردنش به بازی
     try {
-      final walkSprites = [
-        Sprite(await images.load('arian_walk_1.png')),
-        Sprite(await images.load('arian_walk_2.png')),
-        Sprite(await images.load('arian_walk_3.png')),
-        Sprite(await images.load('arian_walk_4.png')),
-      ];
-
-      player = Player(walkSprites);
-      // آرین رو دقیقاً وسط پایین می‌ذاریم (کمی بالاتر از دکمه‌ها)
+      player = Player();
+      // آرین رو دقیقاً وسط پایین می‌ذاریم
       player.position = Vector2(size.x / 2, size.y - 80); 
       player.priority = 5;
       world.add(player);
     } catch (e) {
-      debugPrint("آرین لود نشد: $e");
+      debugPrint("خطا در ساخت آرین: $e");
     }
   }
 }
