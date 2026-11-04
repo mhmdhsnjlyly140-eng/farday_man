@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:flame/game.dart'; // 👈 این خط باعث رفع خطا میشه
 import 'package:flutter/material.dart';
 
 class Player extends PositionComponent {
@@ -43,7 +44,7 @@ class Player extends PositionComponent {
       isMoving = true;
       position.x += direction * speed * dt;
       
-      // محدودیت حرکت در صفحه
+      // محدودیت حرکت در صفحه (استفاده از FlameGame که الان ایمپورت شده)
       final screenWidth = (parent as FlameGame).size.x;
       if (position.x < 70) position.x = 70;
       if (position.x > screenWidth - 70) position.x = screenWidth - 70;
