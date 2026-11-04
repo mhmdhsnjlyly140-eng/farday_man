@@ -3,7 +3,7 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class Player extends PositionComponent {
-  double speed = 150.0;
+  double speed = 250.0; // سرعت رو یکم بیشتر کردیم
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
@@ -11,7 +11,6 @@ class Player extends PositionComponent {
   late SpriteAnimationComponent animationComponent;
   late SpriteAnimation walkAnimation;
 
-  // 👈 عکس‌ها رو از بیرون (توی ShopGame) بهش پاس می‌دیم
   Player(List<Sprite> walkSprites) : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter) {
     walkAnimation = SpriteAnimation.spriteList(
       walkSprites,
@@ -27,7 +26,8 @@ class Player extends PositionComponent {
       size: Vector2(140, 230),
       anchor: Anchor.bottomCenter,
     );
-    
+    // در ابتدا انیمیشن متوقف باشه
+    animationComponent.animation!.stepTime = 0; 
     add(animationComponent);
   }
 
@@ -43,23 +43,22 @@ class Player extends PositionComponent {
       isMoving = true;
       position.x += direction * speed * dt;
       
-      if (position.x < 100) position.x = 100;
-      if (position.x > 700) position.x = 700;
+      // محدودیت حرکت (با توجه به سایز متغیر صفحه، از لبه‌ها فاصله می‌گیریم)
+      final screenWidth = (parent as FlameGame).size.x;
+      if (position.x < 70) position.x = 70;
+      if (position.x > screenWidth - 70) position.x = screenWidth - 70;
 
-      // پخش انیمیشن
-      animationComponent.animation = walkAnimation;
+      animationComponent.animation!.stepTime = 0.15; // انیمیشن راه رفتن
 
       if (direction < 0) {
-        animationComponent.scale.x = -1;
+        animationComponent.scale.x = -1; // چپ
       } else {
-        animationComponent.scale.x = 1;
+        animationComponent.scale.x = 1;  // راست
       }
 
     } else {
       isMoving = false;
-      // برای متوقف کردن انیمیشن، فریم رو صفر می‌کنیم
-      animationComponent.animation = walkAnimation;
-      animationComponent.animation!.stepTime = 0; // ترفند متوقف کردن
+      animationComponent.animation!.stepTime = 0; // توقف انیمیشن
     }
   }
 }
