@@ -52,7 +52,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   bool isMovingLeft = false;
   bool isMovingRight = false;
   bool isMoving = false; 
-  bool faceLeft = false; 
   
   int animationFrame = 1;
   double _animationTimer = 0.0;
@@ -88,20 +87,20 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       setState(() {
         isMoving = true;
         if (isMovingLeft) {
-          faceLeft = true;
           arianX -= 300 * dt; 
-          if (arianX < 80) arianX = 80;
+          if (arianX < 90) arianX = 90;
         } else if (isMovingRight) {
-          faceLeft = false;
           arianX += 300 * dt; 
-          if (arianX > MediaQuery.of(context).size.width - 80) {
-            arianX = MediaQuery.of(context).size.width - 80;
+          if (arianX > MediaQuery.of(context).size.width - 90) {
+            arianX = MediaQuery.of(context).size.width - 90;
           }
         }
 
+        // 🌟 تغییرات مهم: حالا بین 4 فریم می‌چرخه
         _animationTimer += dt;
-        if (_animationTimer >= 0.15) { 
-          animationFrame = animationFrame == 1 ? 2 : 1;
+        if (_animationTimer >= 0.12) { 
+          animationFrame++;
+          if (animationFrame > 4) animationFrame = 1; // برگشت به فریم اول
           _animationTimer = 0;
         }
       });
@@ -124,8 +123,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           GameWidget(game: _game),
           
           Positioned(
-            bottom: 20, 
-            left: arianX - 70, 
+            bottom: 10, 
+            left: arianX - 90, 
             child: _buildArianImage(),
           ),
 
@@ -184,28 +183,30 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildArianImage() {
-    String imagePath = isMoving 
-        ? 'assets/images/arian_walk_${animationFrame == 1 ? 2 : 3}.png' 
-        : 'assets/images/arian_walk_1.png';
+    String imagePath;
 
-    // 👈 راه حل ساده و بدون خطا برای آینه کردن عکس (بدون نیاز به Matrix4)
-    Widget imageWidget = Image.asset(
+    if (isMovingLeft) {
+      imagePath = 'assets/images/arian_left_$animationFrame.png';
+    } else if (isMovingRight) {
+      imagePath = 'assets/images/arian_right_$animationFrame.png';
+    } else {
+      imagePath = 'assets/images/arian_idle.png';
+    }
+
+    return Image.asset(
       imagePath,
-      width: 140,
-      height: 230,
+      width: 180,
+      height: 300,
       fit: BoxFit.contain,
-      matchTextDirection: faceLeft, // اگر true باشه، عکس آینه میشه
       errorBuilder: (context, error, stackTrace) {
         return Container(
-          width: 140,
-          height: 230,
+          width: 180,
+          height: 300,
           color: Colors.red.withOpacity(0.5),
           child: const Center(child: Text("عکس آرین\nپیدا نشد!", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 12))),
         );
       },
     );
-
-    return imageWidget;
   }
 
   Widget _buildControlButton(IconData icon) {
