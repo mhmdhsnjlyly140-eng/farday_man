@@ -4,15 +4,12 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
-  final double worldWidth = 4000; 
-  final double singleAreaWidth = 1000;
-  
+  late SpriteComponent background;
   late SpriteAnimationComponent player;
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
 
-  // مختصات آرین در دنیای بزرگ (نه در صفحه)
-  double playerX = 400;
+  double playerX = 200;
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
@@ -21,37 +18,21 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. ساخت پس‌زمینه
-    final List<String> areaImages = [
-      'street_area_1.png',
-      'street_area_2.png',
-      'street_area_3.png',
-      'street_area_4.png',
-    ];
-
-    for (int i = 0; i < areaImages.length; i++) {
-      try {
-        final image = await images.load(areaImages[i]);
-        double aspectRatio = image.height / image.width;
-        double finalHeight = singleAreaWidth * aspectRatio;
-
-        world.add(SpriteComponent(
-          sprite: Sprite(image),
-          size: Vector2(singleAreaWidth, finalHeight), 
-          position: Vector2(i * singleAreaWidth, 0), 
-          priority: -10,
-        ));
-      } catch (e) {
-        world.add(RectangleComponent(
-          size: Vector2(singleAreaWidth, size.y),
-          position: Vector2(i * singleAreaWidth, 0),
-          paint: Paint()..color = Colors.grey.shade800,
-          priority: -10,
-        ));
-      }
+    // 1. لود عکس اول
+    try {
+      final bgImage = await images.load('street_area_1.png');
+      background = SpriteComponent(
+        sprite: Sprite(bgImage),
+        size: size, 
+        position: Vector2(0, 0),
+        priority: -10,
+      );
+      world.add(background);
+    } catch (e) {
+      debugPrint("عکس پس‌زمینه پیدا نشد");
     }
 
-    // 2. لود کردن آرین
+    // 2. لود آرین و انیمیشن‌ها
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       
@@ -74,11 +55,12 @@ class ShopGame extends FlameGame {
 
       player = SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
-        size: Vector2(160, 250), 
+        size: Vector2(140, 220), // سایز متناسب آرین
         anchor: Anchor.bottomCenter,
       );
       
-      player.position = Vector2(playerX, size.y - 80); 
+      // 🌟 آرین را دقیقاً روی پیاده‌رو می‌نشانیم (130 پیکسل از پایین)
+      player.position = Vector2(playerX, size.y - 130); 
       player.priority = 10;
       world.add(player);
 
@@ -97,15 +79,21 @@ class ShopGame extends FlameGame {
       
       if (moveLeft) {
         playerX -= speed * dt;
-        if (playerX < 80) playerX = 80;
+        if (playerX < 70) {
+          playerX = 70;
+          moveLeft = false; 
+        }
         player.animation = walkLeftAnimation..stepTime = 0.08;
       } else if (moveRight) {
         playerX += speed * dt;
-        if (playerX > worldWidth - 80) playerX = worldWidth - 80;
+        if (playerX > size.x - 70) {
+          playerX = size.x - 70;
+          moveRight = false; 
+        }
         player.animation = walkRightAnimation..stepTime = 0.08;
       }
       
-      player.position = Vector2(playerX, size.y - 80);
+      player.position = Vector2(playerX, size.y - 130);
 
     } else {
       if (isMoving) {
@@ -115,5 +103,12 @@ class ShopGame extends FlameGame {
     }
   }
 
-  void changeBackground(String imagePath) {}
+  void changeAreaImage(String imagePath) async {
+    try {
+      final newImage = await images.load(imagePath);
+      background.sprite = Sprite(newImage);
+    } catch (e) {
+      debugPrint("عکس $imagePath پیدا نشد");
+    }
+  }
 }
