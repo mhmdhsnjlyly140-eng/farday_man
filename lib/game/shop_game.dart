@@ -72,22 +72,23 @@ class ShopGame extends FlameGame {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
 
-    // 3. لود کردن عمو رضا (در ابتدا مخفی است)
+    // 3. لود کردن عمو رضا
     try {
       final uncleImage = await images.load('uncle_idle.png');
       uncle = SpriteComponent(
         sprite: Sprite(uncleImage),
         size: Vector2(130, 200),
-        position: Vector2(size.x / 2, size.y - 80), // قرارگیری وسط هال خونه
+        position: Vector2(size.x * 0.7, size.y - 80), 
         priority: 10,
       );
-      uncle.visible = false; // 🌟 در ابتدا دیده نمی‌شه
+      // 🌟 در ابتدا شفاف باشه (دیده نشه)
+      uncle.opacity = 0.0; 
       world.add(uncle);
     } catch (e) {
       debugPrint("عکس عمو پیدا نشد: $e");
     }
 
-    // 4. لود کردن چراغ‌ها (فقط برای خیابون)
+    // 4. لود کردن چراغ‌ها
     try {
       final lampImage = await images.load('street_lamp.png');
       for (double x = 200; x < size.x * 4; x += 300) {
@@ -95,7 +96,7 @@ class ShopGame extends FlameGame {
           sprite: Sprite(lampImage),
           size: Vector2(80, 200),
           position: Vector2(x, size.y - 280),
-          priority: 20, // روی آرین
+          priority: 20, 
         ));
       }
     } catch (e) {
@@ -127,18 +128,17 @@ class ShopGame extends FlameGame {
     player.position = Vector2(playerX, size.y - 80);
   }
 
-  // 🌟 تابع تغییر پس‌زمینه (با منطق مخفی/نمایان کردن عمو)
   void changeAreaImage(String imagePath) async {
     try {
       final newImage = await images.load(imagePath);
       background.sprite = Sprite(newImage);
 
-      // اگر وارد هال خونه شدیم، عمو رو نشون بده
+      // 🌟 اگر وارد هال خونه شدیم، عمو رو نمایان کن
       if (imagePath == 'home_living_room.png') {
-        uncle.visible = true;
-        uncle.position = Vector2(size.x * 0.7, size.y - 80); // سمت راست هال
+        uncle.opacity = 1.0; 
+        uncle.position = Vector2(size.x * 0.7, size.y - 80); 
       } else {
-        uncle.visible = false;
+        uncle.opacity = 0.0; 
       }
     } catch (e) {
       debugPrint("عکس $imagePath پیدا نشد");
