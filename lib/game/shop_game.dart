@@ -4,8 +4,9 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
-  final double worldWidth = 4000; 
-  final double singleAreaWidth = 1000;
+  // 🌟 عرض دنیا رو کمتر کردیم تا رندر سبک‌تر بشه (۴ منطقه × ۸۰۰)
+  final double worldWidth = 3200; 
+  final double singleAreaWidth = 800;
   
   late SpriteAnimationComponent player;
   late SpriteAnimation walkLeftAnimation;
@@ -18,10 +19,9 @@ class ShopGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    // 🌟 تنظیم دوربین
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. ساخت پس‌زمینه (۴ عکس کنار هم)
+    // 1. ساخت پس‌زمینه
     final List<String> areaImages = [
       'street_area_1.png',
       'street_area_2.png',
@@ -32,6 +32,7 @@ class ShopGame extends FlameGame {
     for (int i = 0; i < areaImages.length; i++) {
       try {
         final image = await images.load(areaImages[i]);
+        // نسبت ابعاد رو حفظ می‌کنیم
         double aspectRatio = image.height / image.width;
         double finalHeight = singleAreaWidth * aspectRatio;
 
@@ -64,17 +65,16 @@ class ShopGame extends FlameGame {
         Sprite(await images.load('arian_right_4.png')),
       ];
 
-      walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.08, loop: true);
-      walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.08, loop: true);
+      walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.1, loop: true);
+      walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
-      // 🌟 سایز آرین
       player = SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
         size: Vector2(160, 250), 
         anchor: Anchor.bottomCenter,
       );
       
-      // 🌟 تنظیم ارتفاع آرین: قرار دادن دقیق پاها روی کاشی‌های پیاده‌رو
+      // ارتفاع آرین (اگر بازم بالا بود این عدد 100 رو کمتر کن، مثلا 80)
       player.position = Vector2(playerX, size.y - 100); 
       player.priority = 10;
       world.add(player);
@@ -94,16 +94,23 @@ class ShopGame extends FlameGame {
       
       if (moveLeft) {
         playerX -= speed * dt;
-        if (playerX < 80) playerX = 80;
-        player.animation = walkLeftAnimation..stepTime = 0.08;
+        if (playerX < 70) playerX = 70;
+        player.animation = walkLeftAnimation..stepTime = 0.1;
       } else if (moveRight) {
         playerX += speed * dt;
-        if (playerX > worldWidth - 80) playerX = worldWidth - 80;
-        player.animation = walkRightAnimation..stepTime = 0.08;
+        if (playerX > worldWidth - 70) playerX = worldWidth - 70;
+        player.animation = walkRightAnimation..stepTime = 0.1;
       }
       
-      // به‌روزرسانی موقعیت آرین
       player.position = Vector2(playerX, size.y - 100);
+
+      // 🌟 دوربین فقط زمانی حرکت می‌کنه که آرین در حال حرکته
+      double targetCameraX = playerX - (size.x / 2);
+      
+      if (targetCameraX < 0) targetCameraX = 0;
+      if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
+      
+      camera.viewfinder.position = Vector2(targetCameraX, 0);
 
     } else {
       if (isMoving) {
@@ -111,15 +118,6 @@ class ShopGame extends FlameGame {
         player.animation!.stepTime = 0; 
       }
     }
-
-    // 🌟 حرکت دوربین: مستقیم و بدون محاسبات سنگین
-    double targetCameraX = playerX - (size.x / 2);
-    
-    // محدودیت دوربین
-    if (targetCameraX < 0) targetCameraX = 0;
-    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
-    
-    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
   void changeBackground(String imagePath) {}
