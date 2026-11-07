@@ -10,6 +10,7 @@ class ShopGame extends FlameGame {
   late SpriteAnimationComponent player;
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
+  late SpriteAnimation idleAnimation; // 🌟 انیمیشن ایستاده
 
   double playerX = 400;
   bool moveLeft = false;
@@ -45,7 +46,7 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 2. لود آرین
+    // 2. لود آرین و انیمیشن‌ها
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       
@@ -63,18 +64,20 @@ class ShopGame extends FlameGame {
         Sprite(await images.load('arian_right_4.png')),
       ];
 
+      // 🌟 ساختن انیمیشن ایستاده (تک فریمی)
+      idleAnimation = SpriteAnimation.spriteList([idleSprite], stepTime: 1.0);
+
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.1, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
       player = SpriteAnimationComponent(
-        // در ابتدا انیمیشن ایستاده
-        animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
-        size: Vector2(160, 250), 
+        animation: idleAnimation, 
+        size: Vector2(130, 200), // 🌟 سایز آرین رو کوچیک‌تر کردیم (اندازه در مغازه)
         anchor: Anchor.bottomCenter,
       );
       
-      // ارتفاع آرین روی پیاده‌رو
-      player.position = Vector2(playerX, size.y - 100); 
+      // 🌟 ارتفاع آرین رو آوردیم پایین‌تر که روی پیاده‌رو بشینه (عدد 80)
+      player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
 
@@ -90,9 +93,8 @@ class ShopGame extends FlameGame {
     if (moveLeft) {
       isMoving = true;
       playerX -= 250 * dt;
-      if (playerX < 80) playerX = 80;
+      if (playerX < 70) playerX = 70;
       
-      // 🌟 تغییر انیمیشن به چپ
       if (player.animation != walkLeftAnimation) {
         player.animation = walkLeftAnimation;
       }
@@ -100,26 +102,22 @@ class ShopGame extends FlameGame {
     } else if (moveRight) {
       isMoving = true;
       playerX += 250 * dt;
-      if (playerX > worldWidth - 80) playerX = worldWidth - 80;
+      if (playerX > worldWidth - 70) playerX = worldWidth - 70;
       
-      // 🌟 تغییر انیمیشن به راست
       if (player.animation != walkRightAnimation) {
         player.animation = walkRightAnimation;
       }
       
     } else {
-      // 🌟 وقتی دکمه ول شد، فقط انیمیشن رو عوض می‌کنیم (بدون دست زدن به stepTime)
+      // 🌟 وقتی دکمه ول شد، به انیمیشن ایستاده برگرد
       if (isMoving) {
         isMoving = false;
-        // برای ایستادن، یه انیمیشن تک فریمی از همون عکس ایستاده می‌سازیم
-        final idleSprite = player.animation!.frames[0].sprite;
-        player.animation = SpriteAnimation.spriteList([idleSprite], stepTime: 1.0);
+        player.animation = idleAnimation;
       }
-      return; // دیگه پایین نمیریم که دوربین آپدیت نشه
     }
     
-    // آپدیت موقعیت آرین
-    player.position = Vector2(playerX, size.y - 100);
+    // آپدیت موقعیت آرین (عدد 80 برای ارتفاع)
+    player.position = Vector2(playerX, size.y - 80);
 
     // 🌟 حرکت دوربین همراه با آرین
     double targetCameraX = playerX - (size.x / 2);
