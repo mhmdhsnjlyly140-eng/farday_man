@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart'; 
 import 'package:flame/game.dart';
 import 'game/shop_game.dart';
-import 'story_screen.dart';
 import 'game_state.dart';
 
 void main() {
@@ -26,11 +25,7 @@ class FardayeManApp extends StatelessWidget {
       title: 'فردای من',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(brightness: Brightness.dark),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const StoryScreen(),
-        '/game': (context) => const GameScreen(),
-      },
+      home: const GameScreen(),
     );
   }
 }
@@ -53,8 +48,24 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   bool isMovingRight = false;
   bool isMoving = false; 
   
+  // 🌟 لیست ۴ منطقه (به ترتیب از چپ به راست)
+  int currentArea = 0;
+  final List<String> areaBackgrounds = [
+    'street_area_1.png', // 0: خیابون اول (لوازم‌التحریر + پارک)
+    'street_area_2.png', // 1: خیابون دوم (سوپرمارکت)
+    'street_area_3.png', // 2: خیابون سوم (گل‌فروشی + دکتر + خونه)
+    'street_area_4.png', // 3: سالن مسابقات
+  ];
+  final List<String> areaNames = [
+    'خیابان محله',
+    'خیابان بازار',
+    'خیابان خانه',
+    'سالن مسابقات',
+  ];
+
   int animationFrame = 1;
   double _animationTimer = 0.0;
+  bool _isTransitioning = false;
 
   @override
   void initState() {
@@ -81,26 +92,37 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0; 
     _lastElapsed = elapsed;
 
-    if (!mounted) return;
+    if (!mounted || _isTransitioning) return;
+
+    final screenWidth = MediaQuery.of(context).size.width;
 
     if (isMovingLeft || isMovingRight) {
       setState(() {
         isMoving = true;
         if (isMovingLeft) {
           arianX -= 300 * dt; 
-          if (arianX < 90) arianX = 90;
+          if (arianX <= 40) {
+            if (currentArea > 0) {
+              _changeArea(currentArea - 1); 
+            } else {
+              arianX = 40; 
+            }
+          }
         } else if (isMovingRight) {
           arianX += 300 * dt; 
-          if (arianX > MediaQuery.of(context).size.width - 90) {
-            arianX = MediaQuery.of(context).size.width - 90;
+          if (arianX >= screenWidth - 40) {
+            if (currentArea < areaBackgrounds.length - 1) {
+              _changeArea(currentArea + 1); 
+            } else {
+              arianX = screenWidth - 40; 
+            }
           }
         }
 
-        // 🌟 تغییرات مهم: حالا بین 4 فریم می‌چرخه
         _animationTimer += dt;
         if (_animationTimer >= 0.12) { 
           animationFrame++;
-          if (animationFrame > 4) animationFrame = 1; // برگشت به فریم اول
+          if (animationFrame > 4) animationFrame = 1; 
           _animationTimer = 0;
         }
       });
@@ -114,6 +136,35 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
   }
 
+  Future<void> _changeArea(int newArea) async {
+    setState(() {
+      _isTransitioning = true;
+      isMoving = false;
+      isMovingLeft = false;
+      isMovingRight = false;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    setState(() {
+      final previousArea = currentArea;
+      currentArea = newArea;
+      if (newArea > previousArea) {
+        arianX = 60;
+      } else {
+        arianX = MediaQuery.of(context).size.width - 60;
+      }
+    });
+
+    _game.changeBackground(areaBackgrounds[newArea]);
+
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    setState(() {
+      _isTransitioning = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,9 +174,29 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           GameWidget(game: _game),
           
           Positioned(
+            top: 20,
+            left: 40,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                areaNames[currentArea],
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
+          
+          Positioned(
             bottom: 10, 
             left: arianX - 90, 
-            child: _buildArianImage(),
+            child: AnimatedOpacity(
+              opacity: _isTransitioning ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: _buildArianImage(),
+            ),
           ),
 
           Positioned(
@@ -184,7 +255,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   Widget _buildArianImage() {
     String imagePath;
-
     if (isMovingLeft) {
       imagePath = 'assets/images/arian_left_$animationFrame.png';
     } else if (isMovingRight) {
