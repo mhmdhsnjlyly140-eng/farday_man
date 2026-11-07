@@ -4,7 +4,6 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
-  // عرض کل دنیا (۴ منطقه × ۱۰۰۰ پیکسل)
   final double worldWidth = 4000; 
   final double singleAreaWidth = 1000;
   
@@ -12,7 +11,6 @@ class ShopGame extends FlameGame {
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
 
-  // مختصات آرین در دنیا
   double playerX = 400;
   bool moveLeft = false;
   bool moveRight = false;
@@ -20,10 +18,9 @@ class ShopGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    // دوربین آزاد باشه تا بتونه حرکت کنه
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 🌟 1. ساخت پس‌زمینه‌ی بلند (۴ تصویر رو به هم می‌چسبونیم)
+    // 1. ساخت پس‌زمینه
     final List<String> areaImages = [
       'street_area_1.png',
       'street_area_2.png',
@@ -34,9 +31,15 @@ class ShopGame extends FlameGame {
     for (int i = 0; i < areaImages.length; i++) {
       try {
         final image = await images.load(areaImages[i]);
+        
+        // 🌟 محاسبه ارتفاع بر اساس نسبت ابعاد اصلی عکس
+        // عرض رو 1000 می‌ذاریم، ارتفاع رو نسبت به عرض اصلی عکس حساب می‌کنیم
+        double aspectRatio = image.height / image.width;
+        double finalHeight = singleAreaWidth * aspectRatio;
+
         world.add(SpriteComponent(
           sprite: Sprite(image),
-          size: Vector2(singleAreaWidth, size.y), 
+          size: Vector2(singleAreaWidth, finalHeight), // 👈 اینجا ارتفاع رو تغییر دادیم
           position: Vector2(i * singleAreaWidth, 0), 
           priority: -10,
         ));
@@ -50,7 +53,7 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 🌟 2. لود کردن آرین و ساختن انیمیشن‌ها
+    // 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       
@@ -71,14 +74,12 @@ class ShopGame extends FlameGame {
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.08, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.08, loop: true);
 
-      // 🌟 سایز آرین رو کوچیک کردیم (160x250)
       player = SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
-        size: Vector2(160, 250),
+        size: Vector2(160, 250), // سایز آرین
         anchor: Anchor.bottomCenter,
       );
       
-      // تنظیم ارتفاع آرین روی پیاده‌رو
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
@@ -111,25 +112,18 @@ class ShopGame extends FlameGame {
     } else {
       if (isMoving) {
         isMoving = false;
-        player.animation!.stepTime = 0; // توقف انیمیشن
+        player.animation!.stepTime = 0; 
       }
     }
 
-    // 🌟 3. حرکت دوربین همراه با آرین
-    // دوربین همیشه آرین رو در مرکز صفحه نگه می‌داره
+    // دوربین مستقیم بره سر جای آرین
     double targetCameraX = playerX - (size.x / 2);
     
-    // محدودیت دوربین در لبه‌های دنیا
     if (targetCameraX < 0) targetCameraX = 0;
     if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
     
-    // حرکت نرم دوربین به سمت آرین
-    camera.viewfinder.position = Vector2(
-      camera.viewfinder.position.x + (targetCameraX - camera.viewfinder.position.x) * dt * 5,
-      0,
-    );
+    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
-  // این تابع رو برای سازگاری با کدهای قبلی نگه می‌داریم (خالی)
   void changeBackground(String imagePath) {}
 }
