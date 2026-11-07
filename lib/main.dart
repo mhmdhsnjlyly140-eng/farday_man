@@ -43,8 +43,19 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
 
-  double cameraOffset = 0.0;
-  double screenWidth = 0;
+  int currentArea = 0;
+  final List<String> areaImages = [
+    'street_area_1.png',
+    'street_area_2.png',
+    'street_area_3.png',
+    'street_area_4.png',
+  ];
+  final List<String> areaNames = [
+    'خیابان محله',
+    'خیابان بازار',
+    'خیابان خانه',
+    'سالن مسابقات',
+  ];
 
   @override
   void initState() {
@@ -52,30 +63,22 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     _game = ShopGame();
     gameState.money += 50; 
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        screenWidth = MediaQuery.of(context).size.width;
-      });
-    });
-
-    // 🌟 تیکر برای آپدیت دوربین (بدون درگیری با Flame)
     _ticker = createTicker((elapsed) {
       final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0; 
       _lastElapsed = elapsed;
 
       if (!mounted) return;
 
-      // محاسبه موقعیت دوربین
-      double targetCam = _game.playerX - (screenWidth / 2);
-      if (targetCam < 0) targetCam = 0;
-      if (targetCam > _game.worldWidth - screenWidth) {
-        targetCam = _game.worldWidth - screenWidth;
+      // تشخیص لبه برای تعویض منطقه (بدون درگیری با Flame)
+      if (_game.playerX >= MediaQuery.of(context).size.width - 90 && _game.moveRight) {
+        if (currentArea < areaImages.length - 1) {
+          _changeArea(currentArea + 1);
+        }
+      } else if (_game.playerX <= 90 && _game.moveLeft) {
+        if (currentArea > 0) {
+          _changeArea(currentArea - 1);
+        }
       }
-
-      // حرکت نرم دوربین
-      setState(() {
-        cameraOffset += (targetCam - cameraOffset) * dt * 10;
-      });
     })..start();
   }
 
@@ -85,25 +88,46 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  void _changeArea(int newArea) {
+    _game.moveLeft = false;
+    _game.moveRight = false;
+    
+    setState(() {
+      currentArea = newArea;
+      // آرین رو ببر وسط صفحه تا حس پرش نداشته باشه
+      _game.playerX = MediaQuery.of(context).size.width / 2; 
+    });
+
+    _game.changeAreaImage(areaImages[newArea]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF2C3E50),
       body: Stack(
         children: [
-          // 🌟 کل دنیای بازی رو جابه‌جا می‌کنیم
-          Positioned.fill(
-            child: Transform.translate(
-              offset: Offset(-cameraOffset, 0),
-              child: SizedBox(
-                width: _game.worldWidth,
-                height: MediaQuery.of(context).size.height,
-                child: GameWidget(game: _game),
+          // موتور بازی
+          GameWidget(game: _game),
+
+          // نام منطقه (بالای صفحه)
+          Positioned(
+            top: 20,
+            left: 40,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                areaNames[currentArea],
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ),
 
-          // پول
+          // پول (بالای صفحه)
           Positioned(
             top: 20, 
             right: 40,
@@ -131,7 +155,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // دکمه‌های حرکت
+          // دکمه‌های حرکت (پایین صفحه)
           Positioned(
             bottom: 20,
             left: 30,
