@@ -67,12 +67,13 @@ class ShopGame extends FlameGame {
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
       player = SpriteAnimationComponent(
+        // در ابتدا انیمیشن ایستاده
         animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
         size: Vector2(160, 250), 
         anchor: Anchor.bottomCenter,
       );
       
-      // 🌟 ارتفاع درست آرین روی پیاده‌رو
+      // ارتفاع آرین روی پیاده‌رو
       player.position = Vector2(playerX, size.y - 100); 
       player.priority = 10;
       world.add(player);
@@ -86,35 +87,46 @@ class ShopGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
 
-    if (moveLeft || moveRight) {
+    if (moveLeft) {
       isMoving = true;
-      double speed = 250;
+      playerX -= 250 * dt;
+      if (playerX < 80) playerX = 80;
       
-      if (moveLeft) {
-        playerX -= speed * dt;
-        if (playerX < 80) playerX = 80;
-        player.animation = walkLeftAnimation..stepTime = 0.1;
-      } else if (moveRight) {
-        playerX += speed * dt;
-        if (playerX > worldWidth - 80) playerX = worldWidth - 80;
-        player.animation = walkRightAnimation..stepTime = 0.1;
+      // 🌟 تغییر انیمیشن به چپ
+      if (player.animation != walkLeftAnimation) {
+        player.animation = walkLeftAnimation;
       }
       
-      player.position = Vector2(playerX, size.y - 100);
-
-      // 🌟 حرکت دوربین همراه با آرین
-      double targetCameraX = playerX - (size.x / 2);
-      if (targetCameraX < 0) targetCameraX = 0;
-      if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
+    } else if (moveRight) {
+      isMoving = true;
+      playerX += 250 * dt;
+      if (playerX > worldWidth - 80) playerX = worldWidth - 80;
       
-      camera.viewfinder.position = Vector2(targetCameraX, 0);
-
+      // 🌟 تغییر انیمیشن به راست
+      if (player.animation != walkRightAnimation) {
+        player.animation = walkRightAnimation;
+      }
+      
     } else {
+      // 🌟 وقتی دکمه ول شد، فقط انیمیشن رو عوض می‌کنیم (بدون دست زدن به stepTime)
       if (isMoving) {
         isMoving = false;
-        player.animation!.stepTime = 0; 
+        // برای ایستادن، یه انیمیشن تک فریمی از همون عکس ایستاده می‌سازیم
+        final idleSprite = player.animation!.frames[0].sprite;
+        player.animation = SpriteAnimation.spriteList([idleSprite], stepTime: 1.0);
       }
+      return; // دیگه پایین نمیریم که دوربین آپدیت نشه
     }
+    
+    // آپدیت موقعیت آرین
+    player.position = Vector2(playerX, size.y - 100);
+
+    // 🌟 حرکت دوربین همراه با آرین
+    double targetCameraX = playerX - (size.x / 2);
+    if (targetCameraX < 0) targetCameraX = 0;
+    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
+    
+    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
   void changeBackground(String imagePath) {}
