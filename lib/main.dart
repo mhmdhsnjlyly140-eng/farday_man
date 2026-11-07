@@ -50,11 +50,11 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   
   int currentArea = 0;
   final List<String> areaBackgrounds = [
-    'street_area_1.png', 
-    'shop_bg.png',       
-    'street_area_2.png', 
-    'street_area_3.png', 
-    'street_area_4.png', 
+    'street_area_1.png', // 0
+    'shop_bg.png',       // 1
+    'street_area_2.png', // 2
+    'street_area_3.png', // 3
+    'street_area_4.png', // 4
   ];
   final List<String> areaNames = [
     'خیابان محله',
@@ -68,7 +68,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   double _animationTimer = 0.0;
   bool _isTransitioning = false;
   
-  // 🌟 متغیرهای مربوط به افکت محو شدن (Fade)
   bool _isBlackOverlayVisible = false;
   double _overlayOpacity = 0.0;
 
@@ -102,6 +101,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (isMovingLeft || isMovingRight) {
+      // 🌟 اشکال ۳ حل شد: سرعت انیمیشن رو کردیم 0.08 تا پرپر نزنه
       setState(() {
         isMoving = true;
         if (isMovingLeft) {
@@ -111,6 +111,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               _changeArea(currentArea - 1); 
             } else {
               arianX = 40; 
+              isMoving = false; // اگه به دیوار رسید، نایست
             }
           }
         } else if (isMovingRight) {
@@ -120,12 +121,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               _changeArea(currentArea + 1); 
             } else {
               arianX = screenWidth - 40; 
+              isMoving = false; // اگه به دیوار رسید، نایست
             }
           }
         }
 
         _animationTimer += dt;
-        if (_animationTimer >= 0.12) { 
+        if (_animationTimer >= 0.08) { 
           animationFrame++;
           if (animationFrame > 4) animationFrame = 1; 
           _animationTimer = 0;
@@ -141,7 +143,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
   }
 
-  // 🌟 تابع جدید برای انتقال با افکت سینمایی
   Future<void> _changeArea(int newArea) async {
     setState(() {
       _isTransitioning = true;
@@ -149,16 +150,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       isMovingLeft = false;
       isMovingRight = false;
       _isBlackOverlayVisible = true;
-      _overlayOpacity = 1.0; // صفحه رو سیاه کن
+      _overlayOpacity = 1.0; 
     });
 
-    // 2 ثانیه صبر کن در حالی که صفحه سیاهه
     await Future.delayed(const Duration(seconds: 2));
 
     setState(() {
       final previousArea = currentArea;
       currentArea = newArea;
       
+      // 🌟 اشکال ۲ حل شد: وقتی رفت منطقه بعدی، از سمت چپ بیاد. وقتی برگشت، از سمت راست
       if (newArea > previousArea) {
         arianX = 60;
       } else {
@@ -168,14 +169,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
     _game.changeBackground(areaBackgrounds[newArea]);
 
-    // یه لحظه صبر کن تا عکس جدید لود بشه
     await Future.delayed(const Duration(milliseconds: 300));
 
     setState(() {
-      _overlayOpacity = 0.0; // صفحه رو آروم شفاف کن تا مغازه دیده بشه
+      _overlayOpacity = 0.0; 
     });
 
-    // صبر کن تا افکت محو شدن تموم بشه
     await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
@@ -244,8 +243,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               ),
             ),
 
+          // 🌟 اشکال ۱ حل شد: ارتفاع آرین رو آوردیم روی پیاده‌رو (bottom: 80)
           Positioned(
-            bottom: 10, 
+            bottom: 80, 
             left: arianX - 90, 
             child: AnimatedOpacity(
               opacity: _isTransitioning ? 0.0 : 1.0,
@@ -281,7 +281,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // دکمه‌های حرکت
           Positioned(
             bottom: 20,
             left: 30,
@@ -305,13 +304,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // 🌟 لایه سیاه (Overlay)
           if (_isBlackOverlayVisible)
             Positioned.fill(
-              child: IgnorePointer( // اجازه بده کلیک‌ها ازش رد بشن
+              child: IgnorePointer( 
                 child: AnimatedOpacity(
                   opacity: _overlayOpacity,
-                  duration: const Duration(milliseconds: 500), // سرعت محو شدن
+                  duration: const Duration(milliseconds: 500), 
                   child: Container(
                     color: Colors.black,
                   ),
