@@ -43,22 +43,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
 
-  double arianX = 200;
+  // مختصات آرین در دنیای بازی (نه در صفحه)
+  double arianX = 400; // وسط دنیا
   bool isMovingLeft = false;
   bool isMovingRight = false;
   bool isMoving = false; 
   
+  // نام مناطقی که با راه رفتن آرین عوض می‌شن (برای نمایش اسم بالای صفحه)
   int currentArea = 0;
-  final List<String> areaBackgrounds = [
-    'street_area_1.png', // 0
-    'shop_bg.png',       // 1
-    'street_area_2.png', // 2
-    'street_area_3.png', // 3
-    'street_area_4.png', // 4
-  ];
   final List<String> areaNames = [
     'خیابان محله',
-    'داخل مغازه',
     'خیابان بازار',
     'خیابان خانه',
     'سالن مسابقات',
@@ -66,10 +60,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   int animationFrame = 1;
   double _animationTimer = 0.0;
-  bool _isTransitioning = false;
-  
-  bool _isBlackOverlayVisible = false;
-  double _overlayOpacity = 0.0;
+
+  // 🌟 تنظیمات دوربین و مقیاس
+  double screenWidth = 0;
+  double scale = 1.0; 
 
   @override
   void initState() {
@@ -79,7 +73,11 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        arianX = MediaQuery.of(context).size.width / 2;
+        screenWidth = MediaQuery.of(context).size.width;
+        // 🌟 محاسبه مقیاس: می‌خوایم کل عرض ۴ تا عکس (مثلاً ۴۰۰۰ پیکسل) توی دوربین جا بشه
+        // ولی ما می‌خوایم آرین بزرگ دیده بشه. پس یه مقیاس منطقی انتخاب می‌کنیم.
+        // فرض می‌کنیم هر منطقه ۱۰۰۰ پیکسل عرض داره. کل دنیا ۴۰۰۰ پیکسله.
+        // ما می‌خوایم ۴ تا عکس پیوسته کنار هم باشن.
       });
     });
 
@@ -96,36 +94,27 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0; 
     _lastElapsed = elapsed;
 
-    if (!mounted || _isTransitioning) return;
+    if (!mounted) return;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-
+    // 🌟 حرکت آرین در دنیا
     if (isMovingLeft || isMovingRight) {
-      // 🌟 اشکال ۳ حل شد: سرعت انیمیشن رو کردیم 0.08 تا پرپر نزنه
       setState(() {
         isMoving = true;
+        
+        // سرعت آرین (پیکسل بر ثانیه)
+        double speed = 250; 
+        
         if (isMovingLeft) {
-          arianX -= 300 * dt; 
-          if (arianX <= 40) {
-            if (currentArea > 0) {
-              _changeArea(currentArea - 1); 
-            } else {
-              arianX = 40; 
-              isMoving = false; // اگه به دیوار رسید، نایست
-            }
-          }
+          arianX -= speed * dt; 
+          // محدودیت سمت چپ کل دنیا
+          if (arianX < 100) arianX = 100;
         } else if (isMovingRight) {
-          arianX += 300 * dt; 
-          if (arianX >= screenWidth - 40) {
-            if (currentArea < areaBackgrounds.length - 1) {
-              _changeArea(currentArea + 1); 
-            } else {
-              arianX = screenWidth - 40; 
-              isMoving = false; // اگه به دیوار رسید، نایست
-            }
-          }
+          arianX += speed * dt; 
+          // محدودیت سمت راست کل دنیا (فرض: ۴ تا منطقه، هر کدوم ۱۰۰۰ پیکسل)
+          if (arianX > 3900) arianX = 3900; 
         }
 
+        // 🌟 به‌روزرسانی انیمیشن راه رفتن (سرعت 0.08 برای نرمی)
         _animationTimer += dt;
         if (_animationTimer >= 0.08) { 
           animationFrame++;
@@ -141,56 +130,43 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         });
       }
     }
-  }
-
-  Future<void> _changeArea(int newArea) async {
-    setState(() {
-      _isTransitioning = true;
-      isMoving = false;
-      isMovingLeft = false;
-      isMovingRight = false;
-      _isBlackOverlayVisible = true;
-      _overlayOpacity = 1.0; 
-    });
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      final previousArea = currentArea;
-      currentArea = newArea;
-      
-      // 🌟 اشکال ۲ حل شد: وقتی رفت منطقه بعدی، از سمت چپ بیاد. وقتی برگشت، از سمت راست
-      if (newArea > previousArea) {
-        arianX = 60;
-      } else {
-        arianX = MediaQuery.of(context).size.width - 60;
-      }
-    });
-
-    _game.changeBackground(areaBackgrounds[newArea]);
-
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    setState(() {
-      _overlayOpacity = 0.0; 
-    });
-
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    setState(() {
-      _isTransitioning = false;
-      _isBlackOverlayVisible = false;
-    });
+    
+    // 🌟 تشخیص منطقه بر اساس مختصات آرین
+    int newArea = (arianX / 1000).floor().clamp(0, 3);
+    if (newArea != currentArea) {
+      setState(() {
+        currentArea = newArea;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 🌟 محاسبه موقعیت دوربین: دوربین همیشه وسط صفحه رو نشون می‌ده
+    // اما وقتی آرین به لبه‌های دنیا می‌رسه، دوربین متوقف می‌شه.
+    double cameraOffset = arianX - (screenWidth / 2);
+    // محدودیت دوربین (نذار از دنیا بیرون بزنه)
+    if (cameraOffset < 0) cameraOffset = 0;
+    // عرض کل دنیا ۴۰۰۰ فرض شده. عرض صفحه رو کم می‌کنیم.
+    if (cameraOffset > 4000 - screenWidth) cameraOffset = 4000 - screenWidth;
+
     return Scaffold(
       backgroundColor: const Color(0xFF2C3E50),
       body: Stack(
         children: [
+          // 🌟 موتور بازی Flame (که کل دنیای ۴۰۰۰ پیکسلی رو با دوربین نشون می‌ده)
           GameWidget(game: _game),
           
+          // 🌟 نمایش آرین با موقعیت جدید (متناسب با دوربین)
+          // ما آرین رو با استفاده از موقعیت دوربین جابه‌جا می‌کنیم
+          Positioned(
+            // مختصات آرین روی صفحه = مختصاتش در دنیا - موقعیت دوربین
+            left: (arianX - cameraOffset) - 80, 
+            bottom: 80, // روی پیاده‌رو
+            child: _buildArianImage(),
+          ),
+
+          // نام منطقه (بالای صفحه)
           Positioned(
             top: 20,
             left: 40,
@@ -207,53 +183,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          if (currentArea == 0 && !_isTransitioning)
-            Positioned(
-              top: 100, 
-              left: 100,
-              child: GestureDetector(
-                onTap: () => _changeArea(1), 
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.8),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(Icons.door_front_door, color: Colors.white, size: 30),
-                ),
-              ),
-            ),
-            
-          if (currentArea == 1 && !_isTransitioning)
-            Positioned(
-              top: 100,
-              right: 100,
-              child: GestureDetector(
-                onTap: () => _changeArea(0), 
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.8),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(Icons.exit_to_app, color: Colors.white, size: 30),
-                ),
-              ),
-            ),
-
-          // 🌟 اشکال ۱ حل شد: ارتفاع آرین رو آوردیم روی پیاده‌رو (bottom: 80)
-          Positioned(
-            bottom: 80, 
-            left: arianX - 90, 
-            child: AnimatedOpacity(
-              opacity: _isTransitioning ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              child: _buildArianImage(),
-            ),
-          ),
-
+          // پول (بالای صفحه)
           Positioned(
             top: 20, 
             right: 40,
@@ -281,6 +211,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             ),
           ),
 
+          // دکمه‌های حرکت
           Positioned(
             bottom: 20,
             left: 30,
@@ -303,19 +234,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
-
-          if (_isBlackOverlayVisible)
-            Positioned.fill(
-              child: IgnorePointer( 
-                child: AnimatedOpacity(
-                  opacity: _overlayOpacity,
-                  duration: const Duration(milliseconds: 500), 
-                  child: Container(
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -331,15 +249,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       imagePath = 'assets/images/arian_idle.png';
     }
 
+    // 🌟 سایز آرین رو کوچیک‌تر کردیم (160x250)
     return Image.asset(
       imagePath,
-      width: 180,
-      height: 300,
+      width: 160,
+      height: 250,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         return Container(
-          width: 180,
-          height: 300,
+          width: 160,
+          height: 250,
           color: Colors.red.withOpacity(0.5),
           child: const Center(child: Text("عکس آرین\nپیدا نشد!", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 12))),
         );
