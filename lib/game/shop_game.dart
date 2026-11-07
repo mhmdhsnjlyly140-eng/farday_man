@@ -18,9 +18,10 @@ class ShopGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
+    // 🌟 تنظیم دوربین
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. ساخت پس‌زمینه
+    // 1. ساخت پس‌زمینه (۴ عکس کنار هم)
     final List<String> areaImages = [
       'street_area_1.png',
       'street_area_2.png',
@@ -41,12 +42,7 @@ class ShopGame extends FlameGame {
           priority: -10,
         ));
       } catch (e) {
-        world.add(RectangleComponent(
-          size: Vector2(singleAreaWidth, size.y),
-          position: Vector2(i * singleAreaWidth, 0),
-          paint: Paint()..color = Colors.grey.shade800,
-          priority: -10,
-        ));
+        debugPrint("عکس پس‌زمینه پیدا نشد: $e");
       }
     }
 
@@ -71,13 +67,15 @@ class ShopGame extends FlameGame {
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.08, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.08, loop: true);
 
+      // 🌟 سایز آرین
       player = SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
         size: Vector2(160, 250), 
         anchor: Anchor.bottomCenter,
       );
       
-      player.position = Vector2(playerX, size.y - 150); 
+      // 🌟 تنظیم ارتفاع آرین: قرار دادن دقیق پاها روی کاشی‌های پیاده‌رو
+      player.position = Vector2(playerX, size.y - 100); 
       player.priority = 10;
       world.add(player);
 
@@ -104,7 +102,8 @@ class ShopGame extends FlameGame {
         player.animation = walkRightAnimation..stepTime = 0.08;
       }
       
-      player.position = Vector2(playerX, size.y - 150);
+      // به‌روزرسانی موقعیت آرین
+      player.position = Vector2(playerX, size.y - 100);
 
     } else {
       if (isMoving) {
@@ -112,6 +111,15 @@ class ShopGame extends FlameGame {
         player.animation!.stepTime = 0; 
       }
     }
+
+    // 🌟 حرکت دوربین: مستقیم و بدون محاسبات سنگین
+    double targetCameraX = playerX - (size.x / 2);
+    
+    // محدودیت دوربین
+    if (targetCameraX < 0) targetCameraX = 0;
+    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
+    
+    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
   void changeBackground(String imagePath) {}
