@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart'; 
 import 'package:flame/game.dart';
 import 'game/shop_game.dart';
 import 'game_state.dart';
@@ -36,15 +37,52 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   late ShopGame _game;
   final gameState = GameState();
+  late Ticker _ticker;
+  Duration _lastElapsed = Duration.zero;
+
+  double cameraOffset = 0.0;
+  double screenWidth = 0;
 
   @override
   void initState() {
     super.initState();
     _game = ShopGame();
     gameState.money += 50; 
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        screenWidth = MediaQuery.of(context).size.width;
+      });
+    });
+
+    // 🌟 تیکر برای آپدیت دوربین (بدون درگیری با Flame)
+    _ticker = createTicker((elapsed) {
+      final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000.0; 
+      _lastElapsed = elapsed;
+
+      if (!mounted) return;
+
+      // محاسبه موقعیت دوربین
+      double targetCam = _game.playerX - (screenWidth / 2);
+      if (targetCam < 0) targetCam = 0;
+      if (targetCam > _game.worldWidth - screenWidth) {
+        targetCam = _game.worldWidth - screenWidth;
+      }
+
+      // حرکت نرم دوربین
+      setState(() {
+        cameraOffset += (targetCam - cameraOffset) * dt * 10;
+      });
+    })..start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose(); 
+    super.dispose();
   }
 
   @override
@@ -53,10 +91,19 @@ class _GameScreenState extends State<GameScreen> {
       backgroundColor: const Color(0xFF2C3E50),
       body: Stack(
         children: [
-          // موتور بازی که کل دنیا و آرین و دوربین رو مدیریت می‌کنه
-          GameWidget(game: _game),
+          // 🌟 کل دنیای بازی رو جابه‌جا می‌کنیم
+          Positioned.fill(
+            child: Transform.translate(
+              offset: Offset(-cameraOffset, 0),
+              child: SizedBox(
+                width: _game.worldWidth,
+                height: MediaQuery.of(context).size.height,
+                child: GameWidget(game: _game),
+              ),
+            ),
+          ),
 
-          // پول (بالای صفحه)
+          // پول
           Positioned(
             top: 20, 
             right: 40,
