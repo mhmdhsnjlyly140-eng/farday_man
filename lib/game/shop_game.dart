@@ -11,6 +11,7 @@ class ShopGame extends FlameGame {
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
 
+  // مختصات آرین در دنیای بزرگ (نه در صفحه)
   double playerX = 400;
   bool moveLeft = false;
   bool moveRight = false;
@@ -31,15 +32,12 @@ class ShopGame extends FlameGame {
     for (int i = 0; i < areaImages.length; i++) {
       try {
         final image = await images.load(areaImages[i]);
-        
-        // 🌟 محاسبه ارتفاع بر اساس نسبت ابعاد اصلی عکس
-        // عرض رو 1000 می‌ذاریم، ارتفاع رو نسبت به عرض اصلی عکس حساب می‌کنیم
         double aspectRatio = image.height / image.width;
         double finalHeight = singleAreaWidth * aspectRatio;
 
         world.add(SpriteComponent(
           sprite: Sprite(image),
-          size: Vector2(singleAreaWidth, finalHeight), // 👈 اینجا ارتفاع رو تغییر دادیم
+          size: Vector2(singleAreaWidth, finalHeight), 
           position: Vector2(i * singleAreaWidth, 0), 
           priority: -10,
         ));
@@ -76,7 +74,7 @@ class ShopGame extends FlameGame {
 
       player = SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([idleSprite], stepTime: 1.0), 
-        size: Vector2(160, 250), // سایز آرین
+        size: Vector2(160, 250), 
         anchor: Anchor.bottomCenter,
       );
       
@@ -115,14 +113,6 @@ class ShopGame extends FlameGame {
         player.animation!.stepTime = 0; 
       }
     }
-
-    // دوربین مستقیم بره سر جای آرین
-    double targetCameraX = playerX - (size.x / 2);
-    
-    if (targetCameraX < 0) targetCameraX = 0;
-    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
-    
-    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
   void changeBackground(String imagePath) {}
