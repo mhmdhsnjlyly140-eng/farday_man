@@ -48,16 +48,17 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   bool isMovingRight = false;
   bool isMoving = false; 
   
-  // 🌟 لیست ۴ منطقه (به ترتیب از چپ به راست)
   int currentArea = 0;
   final List<String> areaBackgrounds = [
-    'street_area_1.png', // 0: خیابون اول (لوازم‌التحریر + پارک)
-    'street_area_2.png', // 1: خیابون دوم (سوپرمارکت)
-    'street_area_3.png', // 2: خیابون سوم (گل‌فروشی + دکتر + خونه)
-    'street_area_4.png', // 3: سالن مسابقات
+    'street_area_1.png', 
+    'shop_bg.png',       
+    'street_area_2.png', 
+    'street_area_3.png', 
+    'street_area_4.png', 
   ];
   final List<String> areaNames = [
     'خیابان محله',
+    'داخل مغازه',
     'خیابان بازار',
     'خیابان خانه',
     'سالن مسابقات',
@@ -66,6 +67,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   int animationFrame = 1;
   double _animationTimer = 0.0;
   bool _isTransitioning = false;
+  
+  // 🌟 متغیرهای مربوط به افکت محو شدن (Fade)
+  bool _isBlackOverlayVisible = false;
+  double _overlayOpacity = 0.0;
 
   @override
   void initState() {
@@ -136,19 +141,24 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
   }
 
+  // 🌟 تابع جدید برای انتقال با افکت سینمایی
   Future<void> _changeArea(int newArea) async {
     setState(() {
       _isTransitioning = true;
       isMoving = false;
       isMovingLeft = false;
       isMovingRight = false;
+      _isBlackOverlayVisible = true;
+      _overlayOpacity = 1.0; // صفحه رو سیاه کن
     });
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // 2 ثانیه صبر کن در حالی که صفحه سیاهه
+    await Future.delayed(const Duration(seconds: 2));
 
     setState(() {
       final previousArea = currentArea;
       currentArea = newArea;
+      
       if (newArea > previousArea) {
         arianX = 60;
       } else {
@@ -158,10 +168,19 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
     _game.changeBackground(areaBackgrounds[newArea]);
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    // یه لحظه صبر کن تا عکس جدید لود بشه
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    setState(() {
+      _overlayOpacity = 0.0; // صفحه رو آروم شفاف کن تا مغازه دیده بشه
+    });
+
+    // صبر کن تا افکت محو شدن تموم بشه
+    await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
       _isTransitioning = false;
+      _isBlackOverlayVisible = false;
     });
   }
 
@@ -188,7 +207,43 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               ),
             ),
           ),
-          
+
+          if (currentArea == 0 && !_isTransitioning)
+            Positioned(
+              top: 100, 
+              left: 100,
+              child: GestureDetector(
+                onTap: () => _changeArea(1), 
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.door_front_door, color: Colors.white, size: 30),
+                ),
+              ),
+            ),
+            
+          if (currentArea == 1 && !_isTransitioning)
+            Positioned(
+              top: 100,
+              right: 100,
+              child: GestureDetector(
+                onTap: () => _changeArea(0), 
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.exit_to_app, color: Colors.white, size: 30),
+                ),
+              ),
+            ),
+
           Positioned(
             bottom: 10, 
             left: arianX - 90, 
@@ -226,6 +281,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             ),
           ),
 
+          // دکمه‌های حرکت
           Positioned(
             bottom: 20,
             left: 30,
@@ -248,6 +304,20 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
+
+          // 🌟 لایه سیاه (Overlay)
+          if (_isBlackOverlayVisible)
+            Positioned.fill(
+              child: IgnorePointer( // اجازه بده کلیک‌ها ازش رد بشن
+                child: AnimatedOpacity(
+                  opacity: _overlayOpacity,
+                  duration: const Duration(milliseconds: 500), // سرعت محو شدن
+                  child: Container(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
