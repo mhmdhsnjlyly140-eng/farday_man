@@ -4,13 +4,14 @@ import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
-  final double worldWidth = 4000; 
-  final double singleAreaWidth = 1000;
-  
+  late SpriteComponent background;
   late SpriteAnimationComponent player;
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
-  late SpriteAnimation idleAnimation; // 🌟 انیمیشن ایستاده
+  late SpriteAnimation idleAnimation;
+  
+  // 🌟 عمو رضا
+  late SpriteComponent uncle;
 
   double playerX = 400;
   bool moveLeft = false;
@@ -21,32 +22,21 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. ساخت پس‌زمینه
-    final List<String> areaImages = [
-      'street_area_1.png',
-      'street_area_2.png',
-      'street_area_3.png',
-      'street_area_4.png',
-    ];
-
-    for (int i = 0; i < areaImages.length; i++) {
-      try {
-        final image = await images.load(areaImages[i]);
-        double aspectRatio = image.height / image.width;
-        double finalHeight = singleAreaWidth * aspectRatio;
-
-        world.add(SpriteComponent(
-          sprite: Sprite(image),
-          size: Vector2(singleAreaWidth, finalHeight), 
-          position: Vector2(i * singleAreaWidth, 0), 
-          priority: -10,
-        ));
-      } catch (e) {
-        debugPrint("عکس پس‌زمینه پیدا نشد: $e");
-      }
+    // 1. عکس پس‌زمینه اولیه
+    try {
+      final bgImage = await images.load('street_area_1.png');
+      background = SpriteComponent(
+        sprite: Sprite(bgImage),
+        size: size,
+        position: Vector2(0, 0),
+        priority: -10,
+      );
+      world.add(background);
+    } catch (e) {
+      debugPrint("عکس پس‌زمینه پیدا نشد");
     }
 
-    // 2. لود آرین و انیمیشن‌ها
+    // 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       
@@ -64,25 +54,52 @@ class ShopGame extends FlameGame {
         Sprite(await images.load('arian_right_4.png')),
       ];
 
-      // 🌟 ساختن انیمیشن ایستاده (تک فریمی)
       idleAnimation = SpriteAnimation.spriteList([idleSprite], stepTime: 1.0);
-
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.1, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
       player = SpriteAnimationComponent(
         animation: idleAnimation, 
-        size: Vector2(130, 200), // 🌟 سایز آرین رو کوچیک‌تر کردیم (اندازه در مغازه)
+        size: Vector2(130, 200), 
         anchor: Anchor.bottomCenter,
       );
       
-      // 🌟 ارتفاع آرین رو آوردیم پایین‌تر که روی پیاده‌رو بشینه (عدد 80)
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
 
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
+    }
+
+    // 3. لود کردن عمو رضا (در ابتدا مخفی است)
+    try {
+      final uncleImage = await images.load('uncle_idle.png');
+      uncle = SpriteComponent(
+        sprite: Sprite(uncleImage),
+        size: Vector2(130, 200),
+        position: Vector2(size.x / 2, size.y - 80), // قرارگیری وسط هال خونه
+        priority: 10,
+      );
+      uncle.visible = false; // 🌟 در ابتدا دیده نمی‌شه
+      world.add(uncle);
+    } catch (e) {
+      debugPrint("عکس عمو پیدا نشد: $e");
+    }
+
+    // 4. لود کردن چراغ‌ها (فقط برای خیابون)
+    try {
+      final lampImage = await images.load('street_lamp.png');
+      for (double x = 200; x < size.x * 4; x += 300) {
+        world.add(SpriteComponent(
+          sprite: Sprite(lampImage),
+          size: Vector2(80, 200),
+          position: Vector2(x, size.y - 280),
+          priority: 20, // روی آرین
+        ));
+      }
+    } catch (e) {
+      debugPrint("عکس چراغ پیدا نشد: $e");
     }
   }
 
@@ -94,38 +111,37 @@ class ShopGame extends FlameGame {
       isMoving = true;
       playerX -= 250 * dt;
       if (playerX < 70) playerX = 70;
-      
-      if (player.animation != walkLeftAnimation) {
-        player.animation = walkLeftAnimation;
-      }
-      
+      if (player.animation != walkLeftAnimation) player.animation = walkLeftAnimation;
     } else if (moveRight) {
       isMoving = true;
       playerX += 250 * dt;
-      if (playerX > worldWidth - 70) playerX = worldWidth - 70;
-      
-      if (player.animation != walkRightAnimation) {
-        player.animation = walkRightAnimation;
-      }
-      
+      if (playerX > size.x - 70) playerX = size.x - 70;
+      if (player.animation != walkRightAnimation) player.animation = walkRightAnimation;
     } else {
-      // 🌟 وقتی دکمه ول شد، به انیمیشن ایستاده برگرد
       if (isMoving) {
         isMoving = false;
         player.animation = idleAnimation;
       }
     }
     
-    // آپدیت موقعیت آرین (عدد 80 برای ارتفاع)
     player.position = Vector2(playerX, size.y - 80);
-
-    // 🌟 حرکت دوربین همراه با آرین
-    double targetCameraX = playerX - (size.x / 2);
-    if (targetCameraX < 0) targetCameraX = 0;
-    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
-    
-    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
-  void changeBackground(String imagePath) {}
+  // 🌟 تابع تغییر پس‌زمینه (با منطق مخفی/نمایان کردن عمو)
+  void changeAreaImage(String imagePath) async {
+    try {
+      final newImage = await images.load(imagePath);
+      background.sprite = Sprite(newImage);
+
+      // اگر وارد هال خونه شدیم، عمو رو نشون بده
+      if (imagePath == 'home_living_room.png') {
+        uncle.visible = true;
+        uncle.position = Vector2(size.x * 0.7, size.y - 80); // سمت راست هال
+      } else {
+        uncle.visible = false;
+      }
+    } catch (e) {
+      debugPrint("عکس $imagePath پیدا نشد");
+    }
+  }
 }
