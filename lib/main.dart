@@ -38,18 +38,24 @@ class MainMenuScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
+          // 1. عکس آیکون به عنوان پس‌زمینه (با محافظ کرش)
           Positioned.fill(
             child: Image.asset(
               'assets/images/app_icon.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
+                // اگه عکس نبود، به جای کرش کردن، یه رنگ ساده نشون بده
                 return Container(color: const Color(0xFF1E1E2C));
               },
             ),
           ),
+          
+          // 2. لایه تاریک
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.4)),
           ),
+          
+          // 3. محتوای منو
           Center(
             child: SingleChildScrollView(
               child: Column(
@@ -190,44 +196,14 @@ class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
   
-  // وضعیت دیالوگ
   bool showDialogue = false;
   int dialogueIndex = 0;
 
-  // دیالوگ‌های قسمت ۱
   final List<Map<String, String>> dialogues = [
-    {
-      "speaker": "عمو رضا",
-      "text": "آرین! این دفترهای جدید رو چیدی روی هم؟ دیروز که خودت گفتی اینا رو مرتب کنم!"
-    },
-    {
-      "speaker": "آرین",
-      "text": "صبح بخیر عمو. دیروز که گفتی «مرتبشون کن»، نگفتی «مثل ویترین طلا بچینشون»!"
-    },
-    {
-      "speaker": "سارا",
-      "text": "سلام عمو! سلام آرین! آرین، این کتاب رو دیدم و یاد تو افتادم. فکر کنم خوشت بیاد."
-    },
-    {
-      "speaker": "آرین",
-      "text": "عجایب جهان؟ این که مال بچه‌هاست!"
-    },
-    {
-      "speaker": "سارا",
-      "text": "آره؟ پس چرا داری با علاقه ورقش می‌زنی؟"
-    },
-    {
-      "speaker": "سارا",
-      "text": "راستی آرین... شنیدی مسابقات علمی شهر داره شروع می‌شه؟"
-    },
-    {
-      "speaker": "آرین",
-      "text": "مسابقات علمی؟ من که... من فقط یه مغازه‌دارم. کسی مثل من توی مسابقات علمی چی کار می‌کنه؟"
-    },
-    {
-      "speaker": "سارا",
-      "text": "کسی مثل تو؟ آرین، تو از خیلی از کسایی که توی مسابقاتن باهوش‌تری. فقط خودت باورت نشده."
-    }
+    {"speaker": "عمو رضا", "text": "آرین! این دفترهای جدید رو چیدی روی هم؟"},
+    {"speaker": "آرین", "text": "صبح بخیر عمو. دیروز که گفتی مرتبشون کنم!"},
+    {"speaker": "سارا", "text": "سلام عمو! سلام آرین! این کتاب رو دیدم و یاد تو افتادم."},
+    {"speaker": "سارا", "text": "راستی آرین... شنیدی مسابقات علمی شهر داره شروع می‌شه؟"}
   ];
 
   @override
@@ -235,49 +211,6 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     _game = ShopGame();
     gameState.money += 50; 
-  }
-
-  void _openShop() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
-          title: const Text("فروشگاه سکه", style: TextStyle(color: Colors.amber)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("سکه‌های شما: ${gameState.money}", style: const TextStyle(color: Colors.white, fontSize: 18)),
-              const SizedBox(height: 20),
-              _buildCoinButton("۱۰۰ سکه", 100),
-              _buildCoinButton("۲۹۹ سکه", 299),
-              _buildCoinButton("۹۹۹ سکه", 999),
-              _buildCoinButton("۱۵۰۰ سکه", 1500),
-              _buildCoinButton("۴۵۰۰ سکه", 4500),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCoinButton(String text, int amount) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-        onPressed: () {
-          setState(() {
-            gameState.money += amount;
-          });
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("$amount سکه به حساب شما اضافه شد!")),
-          );
-        },
-        child: Text(text, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      ),
-    );
   }
 
   void _startDialogue() {
@@ -308,7 +241,6 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // دکمه برگشت
           if (!showDialogue)
             Positioned(
               top: 20,
@@ -329,58 +261,30 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // نام منطقه
-          Positioned(
-            top: 20,
-            left: 80,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(20),
+          if (!showDialogue)
+            Positioned(
+              top: 20, 
+              right: 40,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber, width: 2),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${gameState.money}',
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('خیابان محله', style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
-          ),
 
-          // پول و دکمه +
-          Positioned(
-            top: 20, 
-            right: 40,
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.amber, width: 2),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.monetization_on, color: Colors.amber, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${gameState.money}',
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: _openShop,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                    child: const Icon(Icons.add, color: Colors.white, size: 24),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // دکمه صحبت
           if (!showDialogue)
             Positioned(
               top: 80,
@@ -392,7 +296,6 @@ class _GameScreenState extends State<GameScreen> {
                   decoration: BoxDecoration(
                     color: Colors.blueAccent,
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 5)],
                   ),
                   child: const Row(
                     children: [
@@ -405,7 +308,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // دکمه‌های حرکت
           if (!showDialogue)
             Positioned(
               bottom: 20,
@@ -430,7 +332,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // کادر دیالوگ
           if (showDialogue)
             Positioned(
               bottom: 0,
