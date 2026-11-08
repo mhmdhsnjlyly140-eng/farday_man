@@ -31,9 +31,7 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
-        env:
-          # 👈 این خط مشکل دانلود کاتلین رو حل می‌کنه
-          GRADLE_OPTS: "-I android/init.gradle"
+        # 🌟 خط GRADLE_OPTS کاملاً حذف شد تا خطای init.gradle پیش نیاد
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
