@@ -29,6 +29,9 @@ class FardayeManApp extends StatelessWidget {
   }
 }
 
+// ==========================================
+// 🌟 صفحه منوی اصلی
+// ==========================================
 class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({super.key});
 
@@ -176,6 +179,9 @@ class MainMenuScreen extends StatelessWidget {
   }
 }
 
+// ==========================================
+// 🌟 صفحه بازی
+// ==========================================
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -189,12 +195,66 @@ class _GameScreenState extends State<GameScreen> {
   
   bool showDialogue = false;
   int dialogueIndex = 0;
+  String currentSpeakerImage = 'arian_portrait.png'; 
 
+  // 📖 داستان جدید و مرموز قسمت اول
   final List<Map<String, String>> dialogues = [
-    {"speaker": "عمو رضا", "text": "آرین! این دفترهای جدید رو چیدی روی هم؟"},
-    {"speaker": "آرین", "text": "صبح بخیر عمو. دیروز که گفتی مرتبشون کنم!"},
-    {"speaker": "سارا", "text": "سلام عمو! سلام آرین! این کتاب رو دیدم و یاد تو افتادم."},
-    {"speaker": "سارا", "text": "راستی آرین... شنیدی مسابقات علمی شهر داره شروع می‌شه؟"}
+    {
+      "speaker": "عمو رضا",
+      "text": "آرین! این دفترهای جدید رو چیدی روی هم؟ دیروز که خودت گفتی اینا رو مرتب کنم!"
+    },
+    {
+      "speaker": "آرین",
+      "text": "صبح بخیر عمو. دیروز که گفتی «مرتبشون کن»، نگفتی «مثل ویترین طلا بچینشون»!"
+    },
+    {
+      "speaker": "سارا",
+      "text": "سلام عمو! سلام آرین! آرین، این کتاب رو دیدم و یاد تو افتادم. یه کتاب قدیمی درباره‌ی «عجایب جهان»."
+    },
+    {
+      "speaker": "آرین",
+      "text": "عجایب جهان؟ این که مال بچه‌هاست!... ولی راستش، این نقاشی‌های فضا و تاریخش منو یاد یه چیزایی می‌ندازه."
+    },
+    {
+      "speaker": "سارا",
+      "text": "راستی آرین... شنیدی مسابقات علمی شهر داره شروع می‌شه؟ ثبت‌نامش هفته‌ی دیگه بسته می‌شه."
+    },
+    {
+      "speaker": "آرین",
+      "text": "مسابقات علمی؟ من که فقط یه مغازه‌دارم. کسی مثل من توی مسابقات علمی چی کار می‌کنه؟"
+    },
+    {
+      "speaker": "سارا",
+      "text": "کسی مثل تو؟ آرین، تو از خیلی از کسایی که توی مسابقاتن باهوش‌تری. فقط خودت باورت نشده."
+    },
+    {
+      "speaker": "عمو رضا",
+      "text": "راستش آرین... سارا راست می‌گه. من یه چیزی رو ازت پنهون کردم. پدر تو هم وقتی جوون بود توی همین مسابقات شرکت کرد. ولی یه اتفاقی افتاد که..."
+    },
+    {
+      "speaker": "آرین",
+      "text": "عمو؟! پدر من؟! چرا هیچ‌وقت بهم نگفتی؟"
+    },
+    {
+      "speaker": "عمو رضا",
+      "text": "چون می‌خواستم وقتی بزرگ شدی، خودت راهت رو انتخاب کنی. اما حالا... فکر می‌کنم وقتشه که راز تراشه‌ای که دیروز یه پیرمرد مرموز بهمون داد رو بفهمیم."
+    },
+    {
+      "speaker": "سارا",
+      "text": "تراشه؟ چه تراشه‌ای؟"
+    },
+    {
+      "speaker": "عمو رضا",
+      "text": "یه تراشه‌ی عجیب که روش یه سری علامت و رمز داره. پیرمرد گفت که این تراشه کلید ورود به یه مسابقه‌ی ویژه‌ست... مسابقه‌ای که فقط با دعوت واردش می‌شن."
+    },
+    {
+      "speaker": "آرین",
+      "text": "پس اون پیرمرد... دکتر مهرگان... اون منو دعوت کرد؟"
+    },
+    {
+      "speaker": "عمو رضا",
+      "text": "آره پسر. و به نظر من، این شروع یه ماجرای بزرگه. ماجرایی که شاید سرنوشتت رو تغییر بده."
+    }
   ];
 
   @override
@@ -210,12 +270,27 @@ class _GameScreenState extends State<GameScreen> {
       dialogueIndex = 0;
       _game.moveLeft = false;
       _game.moveRight = false;
+      _updateSpeakerImage(0);
     });
+  }
+
+  void _updateSpeakerImage(int index) {
+    String speaker = dialogues[index]["speaker"]!;
+    if (speaker == "عمو رضا") {
+      currentSpeakerImage = 'uncle_portrait.png';
+    } else if (speaker == "سارا") {
+      currentSpeakerImage = 'sara_portrait.png';
+    } else {
+      currentSpeakerImage = 'arian_portrait.png';
+    }
   }
 
   void _nextDialogue() {
     if (dialogueIndex < dialogues.length - 1) {
-      setState(() => dialogueIndex++);
+      setState(() {
+        dialogueIndex++;
+        _updateSpeakerImage(dialogueIndex);
+      });
     } else {
       setState(() {
         showDialogue = false;
@@ -232,6 +307,7 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
+          // دکمه برگشت
           if (!showDialogue)
             Positioned(
               top: 20,
@@ -252,6 +328,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
+          // پول
           if (!showDialogue)
             Positioned(
               top: 20, 
@@ -276,6 +353,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
+          // دکمه صحبت
           if (!showDialogue)
             Positioned(
               top: 80,
@@ -299,6 +377,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
+          // دکمه‌های حرکت
           if (!showDialogue)
             Positioned(
               bottom: 20,
@@ -323,6 +402,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
+          // 🌟 کادر دیالوگ با عکس پرتره
           if (showDialogue)
             Positioned(
               bottom: 0,
@@ -334,29 +414,56 @@ class _GameScreenState extends State<GameScreen> {
                   color: Colors.black.withOpacity(0.85),
                   border: const Border(top: BorderSide(color: Colors.amber, width: 3)),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      dialogues[dialogueIndex]["speaker"]!,
-                      style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      dialogues[dialogueIndex]["text"]!,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    const SizedBox(height: 15),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton(
-                        onPressed: _nextDialogue,
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                        child: Text(
-                          dialogueIndex == dialogues.length - 1 ? "پایان" : "ادامه",
-                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    // عکس پرتره
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.amber, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/$currentSpeakerImage',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.person, color: Colors.white, size: 40);
+                          },
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    // متن دیالوگ
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            dialogues[dialogueIndex]["speaker"]!,
+                            style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            dialogues[dialogueIndex]["text"]!,
+                            style: const TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: ElevatedButton(
+                              onPressed: _nextDialogue,
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                              child: Text(
+                                dialogueIndex == dialogues.length - 1 ? "پایان" : "ادامه",
+                                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
