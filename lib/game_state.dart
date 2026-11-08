@@ -4,6 +4,7 @@ class GameState {
   GameState._internal();
 
   int money = 0;
+  int coins = 0;
   int day = 1;
   int knowledge = 0;
 
