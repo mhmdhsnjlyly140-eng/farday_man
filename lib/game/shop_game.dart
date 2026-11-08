@@ -21,16 +21,12 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. عکس پس‌زمینه اولیه (با تنظیم سایز برای پر کردن کل صفحه)
+    // 1. لود کردن عکس پس‌زمینه اول
     try {
       final bgImage = await images.load('street_area_1.png');
-      // محاسبه ارتفاع بر اساس نسبت ابعاد عکس تا کشیده نشه
-      double aspectRatio = bgImage.height / bgImage.width;
-      double finalHeight = size.x * aspectRatio;
-
       background = SpriteComponent(
         sprite: Sprite(bgImage),
-        size: Vector2(size.x, finalHeight), // 🌟 عرض دقیقا اندازه صفحه
+        size: _calculateCoverSize(bgImage),
         position: Vector2(0, 0),
         priority: -10,
       );
@@ -89,22 +85,26 @@ class ShopGame extends FlameGame {
     } catch (e) {
       debugPrint("عکس عمو پیدا نشد: $e");
     }
+  }
 
-    // 4. لود کردن چراغ‌ها (با تنظیم ارتفاع دقیق روی پیاده‌رو)
-    try {
-      final lampImage = await images.load('street_lamp.png');
-      // چراغ‌ها رو در فواصل منظم قرار می‌دیم
-      for (double x = 150; x < size.x * 2; x += 400) { // هر 400 پیکسل
-        world.add(SpriteComponent(
-          sprite: Sprite(lampImage),
-          size: Vector2(60, 180), // سایز چراغ
-          position: Vector2(x, size.y - 250), // ارتفاع چراغ
-          priority: 20, // روی آرین
-        ));
-      }
-    } catch (e) {
-      debugPrint("عکس چراغ پیدا نشد: $e");
+  // 🌟 تابع محاسبه سایز عکس برای پر کردن صفحه (بدون کشیدگی)
+  Vector2 _calculateCoverSize(Image image) {
+    double imageRatio = image.width / image.height;
+    double screenRatio = size.x / size.y;
+
+    double width, height;
+
+    if (imageRatio > screenRatio) {
+      // عکس پهن‌تر از صفحه‌ست (باید ارتفاع رو پر کنه و عرضش بره بیرون)
+      height = size.y;
+      width = height * imageRatio;
+    } else {
+      // عکس کشیده‌تر از صفحه‌ست (باید عرض رو پر کنه و ارتفاعش بره بیرون)
+      width = size.x;
+      height = width / imageRatio;
     }
+
+    return Vector2(width, height);
   }
 
   @override
@@ -134,13 +134,10 @@ class ShopGame extends FlameGame {
   void changeAreaImage(String imagePath) async {
     try {
       final newImage = await images.load(imagePath);
-      
-      // 🌟 تنظیم سایز عکس جدید برای پر کردن کل صفحه
-      double aspectRatio = newImage.height / newImage.width;
-      double finalHeight = size.x * aspectRatio;
-      
       background.sprite = Sprite(newImage);
-      background.size = Vector2(size.x, finalHeight); // به‌روزرسانی سایز
+      
+      // 🌟 تنظیم سایز عکس جدید طبق همون قانون
+      background.size = _calculateCoverSize(newImage);
 
       if (imagePath == 'home_living_room.png') {
         uncle.opacity = 1.0; 
