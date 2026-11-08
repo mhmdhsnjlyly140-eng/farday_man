@@ -40,6 +40,14 @@ class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
 
+  // نام مناطق (فقط برای نمایش بالای صفحه)
+  final List<String> areaNames = [
+    'خیابان محله',
+    'خیابان بازار',
+    'خیابان خانه',
+    'سالن مسابقات',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +63,24 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
+          // نام منطقه (فعلاً ثابت روی اولی)
+          Positioned(
+            top: 20,
+            left: 40,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'خیابان محله',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
+
+          // پول
           Positioned(
             top: 20, 
             right: 40,
@@ -82,6 +108,7 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
 
+          // دکمه‌های حرکت
           Positioned(
             bottom: 20,
             left: 30,
