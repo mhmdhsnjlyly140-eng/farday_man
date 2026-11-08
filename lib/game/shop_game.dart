@@ -1,17 +1,16 @@
-import 'dart:ui' as ui; // 🌟 برای رفع تداخل اسم Image
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
-  late SpriteComponent background;
+  final double worldWidth = 4000; 
+  final double singleAreaWidth = 1000;
+  
   late SpriteAnimationComponent player;
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
   late SpriteAnimation idleAnimation;
-  
-  late SpriteComponent uncle;
 
   double playerX = 400;
   bool moveLeft = false;
@@ -22,21 +21,33 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. لود کردن عکس پس‌زمینه اول
-    try {
-      final bgImage = await images.load('street_area_1.png');
-      background = SpriteComponent(
-        sprite: Sprite(bgImage),
-        size: _calculateCoverSize(bgImage),
-        position: Vector2(0, 0),
-        priority: -10,
-      );
-      world.add(background);
-    } catch (e) {
-      debugPrint("عکس پس‌زمینه پیدا نشد");
+    // 🌟 1. لود کردن هر ۴ عکس منطقه به صورت پیوسته
+    final List<String> areaImages = [
+      'street_area_1.png',
+      'street_area_2.png',
+      'street_area_3.png',
+      'street_area_4.png',
+    ];
+
+    for (int i = 0; i < areaImages.length; i++) {
+      try {
+        final image = await images.load(areaImages[i]);
+        // محاسبه ارتفاع بر اساس عرض 1000
+        double aspectRatio = image.height / image.width;
+        double finalHeight = singleAreaWidth * aspectRatio;
+
+        world.add(SpriteComponent(
+          sprite: Sprite(image),
+          size: Vector2(singleAreaWidth, finalHeight), 
+          position: Vector2(i * singleAreaWidth, 0), 
+          priority: -10,
+        ));
+      } catch (e) {
+        debugPrint("عکس ${areaImages[i]} پیدا نشد");
+      }
     }
 
-    // 2. لود کردن آرین
+    // 🌟 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       
@@ -58,53 +69,21 @@ class ShopGame extends FlameGame {
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.1, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
+      // 🌟 سایز آرین رو کوچیک کردیم که اندازه‌ی در مغازه باشه (110x170)
       player = SpriteAnimationComponent(
         animation: idleAnimation, 
-        size: Vector2(130, 200), 
+        size: Vector2(110, 170), 
         anchor: Anchor.bottomCenter,
       );
       
-      player.position = Vector2(playerX, size.y - 80); 
+      // 🌟 ارتفاع آرین رو تنظیم کردیم که روی پیاده‌رو باشه (size.y - 70)
+      player.position = Vector2(playerX, size.y - 70); 
       player.priority = 10;
       world.add(player);
 
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
-
-    // 3. لود کردن عمو رضا
-    try {
-      final uncleImage = await images.load('uncle_idle.png');
-      uncle = SpriteComponent(
-        sprite: Sprite(uncleImage),
-        size: Vector2(130, 200),
-        position: Vector2(size.x * 0.7, size.y - 80), 
-        priority: 10,
-      );
-      uncle.opacity = 0.0; 
-      world.add(uncle);
-    } catch (e) {
-      debugPrint("عکس عمو پیدا نشد: $e");
-    }
-  }
-
-  // 🌟 تابع اصلاح‌شده با تایپ ui.Image و علامت ! برای null نبودن
-  Vector2 _calculateCoverSize(ui.Image image) {
-    // ارتفاع و عرض عکس رو با علامت ! می‌گیریم تا خطای null نده
-    double imageRatio = image.width / image.height;
-    double screenRatio = size.x / size.y;
-
-    double width, height;
-
-    if (imageRatio > screenRatio) {
-      height = size.y;
-      width = height * imageRatio;
-    } else {
-      width = size.x;
-      height = width / imageRatio;
-    }
-
-    return Vector2(width, height);
   }
 
   @override
@@ -119,7 +98,7 @@ class ShopGame extends FlameGame {
     } else if (moveRight) {
       isMoving = true;
       playerX += 250 * dt;
-      if (playerX > size.x - 70) playerX = size.x - 70;
+      if (playerX > worldWidth - 70) playerX = worldWidth - 70;
       if (player.animation != walkRightAnimation) player.animation = walkRightAnimation;
     } else {
       if (isMoving) {
@@ -128,24 +107,15 @@ class ShopGame extends FlameGame {
       }
     }
     
-    player.position = Vector2(playerX, size.y - 80);
+    player.position = Vector2(playerX, size.y - 70);
+
+    // 🌟 3. برگردوندن دوربین (همراه با آرین)
+    double targetCameraX = playerX - (size.x / 2);
+    if (targetCameraX < 0) targetCameraX = 0;
+    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
+    
+    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
-  void changeAreaImage(String imagePath) async {
-    try {
-      final newImage = await images.load(imagePath);
-      background.sprite = Sprite(newImage);
-      
-      background.size = _calculateCoverSize(newImage);
-
-      if (imagePath == 'home_living_room.png') {
-        uncle.opacity = 1.0; 
-        uncle.position = Vector2(size.x * 0.7, size.y - 80); 
-      } else {
-        uncle.opacity = 0.0; 
-      }
-    } catch (e) {
-      debugPrint("عکس $imagePath پیدا نشد");
-    }
-  }
+  void changeAreaImage(String imagePath) {}
 }
