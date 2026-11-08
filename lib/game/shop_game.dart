@@ -21,7 +21,6 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 🌟 1. لود کردن هر ۴ عکس منطقه به صورت پیوسته
     final List<String> areaImages = [
       'street_area_1.png',
       'street_area_2.png',
@@ -32,7 +31,6 @@ class ShopGame extends FlameGame {
     for (int i = 0; i < areaImages.length; i++) {
       try {
         final image = await images.load(areaImages[i]);
-        // محاسبه ارتفاع بر اساس عرض 1000
         double aspectRatio = image.height / image.width;
         double finalHeight = singleAreaWidth * aspectRatio;
 
@@ -47,7 +45,6 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 🌟 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       
@@ -69,14 +66,12 @@ class ShopGame extends FlameGame {
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.1, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
-      // 🌟 سایز آرین رو کوچیک کردیم که اندازه‌ی در مغازه باشه (110x170)
       player = SpriteAnimationComponent(
         animation: idleAnimation, 
         size: Vector2(110, 170), 
         anchor: Anchor.bottomCenter,
       );
       
-      // 🌟 ارتفاع آرین رو تنظیم کردیم که روی پیاده‌رو باشه (size.y - 70)
       player.position = Vector2(playerX, size.y - 70); 
       player.priority = 10;
       world.add(player);
@@ -109,7 +104,6 @@ class ShopGame extends FlameGame {
     
     player.position = Vector2(playerX, size.y - 70);
 
-    // 🌟 3. برگردوندن دوربین (همراه با آرین)
     double targetCameraX = playerX - (size.x / 2);
     if (targetCameraX < 0) targetCameraX = 0;
     if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
