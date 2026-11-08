@@ -1,3 +1,4 @@
+import 'dart:ui' as ui; // 🌟 برای رفع تداخل اسم Image
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -87,19 +88,18 @@ class ShopGame extends FlameGame {
     }
   }
 
-  // 🌟 تابع محاسبه سایز عکس برای پر کردن صفحه (بدون کشیدگی)
-  Vector2 _calculateCoverSize(Image image) {
+  // 🌟 تابع اصلاح‌شده با تایپ ui.Image و علامت ! برای null نبودن
+  Vector2 _calculateCoverSize(ui.Image image) {
+    // ارتفاع و عرض عکس رو با علامت ! می‌گیریم تا خطای null نده
     double imageRatio = image.width / image.height;
     double screenRatio = size.x / size.y;
 
     double width, height;
 
     if (imageRatio > screenRatio) {
-      // عکس پهن‌تر از صفحه‌ست (باید ارتفاع رو پر کنه و عرضش بره بیرون)
       height = size.y;
       width = height * imageRatio;
     } else {
-      // عکس کشیده‌تر از صفحه‌ست (باید عرض رو پر کنه و ارتفاعش بره بیرون)
       width = size.x;
       height = width / imageRatio;
     }
@@ -136,7 +136,6 @@ class ShopGame extends FlameGame {
       final newImage = await images.load(imagePath);
       background.sprite = Sprite(newImage);
       
-      // 🌟 تنظیم سایز عکس جدید طبق همون قانون
       background.size = _calculateCoverSize(newImage);
 
       if (imagePath == 'home_living_room.png') {
