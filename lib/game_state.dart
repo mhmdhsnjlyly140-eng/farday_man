@@ -10,7 +10,6 @@ class GameState {
   int coins = 0;
   int day = 1;
 
-  // 🌟 ذخیره کردن اطلاعات
   Future<void> saveGame() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('shopMoney', shopMoney);
@@ -19,7 +18,6 @@ class GameState {
     await prefs.setInt('day', day);
   }
 
-  // 🌟 لود کردن اطلاعات
   Future<void> loadGame() async {
     final prefs = await SharedPreferences.getInstance();
     shopMoney = prefs.getInt('shopMoney') ?? 100000;
@@ -28,7 +26,6 @@ class GameState {
     day = prefs.getInt('day') ?? 1;
   }
 
-  // 🌟 ریست کردن بازی
   Future<void> resetGame() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
