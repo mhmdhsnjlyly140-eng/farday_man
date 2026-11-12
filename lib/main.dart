@@ -24,7 +24,7 @@ class FardayeManApp extends StatelessWidget {
       title: 'فردای من',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(brightness: Brightness.dark),
-      home: const GameScreen(), 
+      home: const GameScreen(),
     );
   }
 }
@@ -40,7 +40,7 @@ class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
 
-  bool showDialogue = true; 
+  bool showDialogue = true;
   int dialogueIndex = 0;
   String currentSpeakerImage = 'mother_portrait.png';
 
@@ -49,6 +49,7 @@ class _GameScreenState extends State<GameScreen> {
     {"speaker": "آرین", "text": "مامان، پنج دقیقه دیگه...", "portrait": "arian_portrait.png"},
     {"speaker": "مادر", "text": "پنج دقیقه دیگه یعنی چی؟ مغازه رو کی می‌خوای باز کنی؟", "portrait": "mother_portrait.png"},
     {"speaker": "آرین", "text": "الان بلند می‌شم!", "portrait": "arian_portrait.png"},
+    {"speaker": "مادر", "text": "صبحانه‌ات رو هم آماده کردم. زودتر بیا.", "portrait": "mother_portrait.png"},
   ];
 
   @override
@@ -71,7 +72,7 @@ class _GameScreenState extends State<GameScreen> {
       });
     } else {
       setState(() {
-        showDialogue = false; 
+        showDialogue = false;
       });
     }
   }
@@ -84,7 +85,7 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // 🌟 دکمه‌های پول و سکه
+          // 🌟 دکمه‌های پول
           Positioned(
             top: 20,
             right: 40,
@@ -150,7 +151,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 کادر دیالوگ (اصلاح شده)
+          // 🌟 کادر دیالوگ
           if (showDialogue)
             Positioned(
               bottom: 0,
@@ -158,7 +159,6 @@ class _GameScreenState extends State<GameScreen> {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.all(20),
-                // 🌟 اینجا رنگ پس‌زمینه رو کاملاً مشکی و مات کردیم
                 decoration: const BoxDecoration(
                   color: Colors.black, 
                   border: Border(top: BorderSide(color: Colors.amber, width: 3)),
