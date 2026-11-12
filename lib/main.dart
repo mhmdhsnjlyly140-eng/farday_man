@@ -24,7 +24,7 @@ class FardayeManApp extends StatelessWidget {
       title: 'فردای من',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(brightness: Brightness.dark),
-      home: const GameScreen(), // 🌟 مستقیم میره به بازی
+      home: const GameScreen(), 
     );
   }
 }
@@ -40,11 +40,10 @@ class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
 
-  bool showDialogue = true; // 🌟 از اول دیالوگ بازه
+  bool showDialogue = true; 
   int dialogueIndex = 0;
   String currentSpeakerImage = 'mother_portrait.png';
 
-  // 🌟 لیست دیالوگ‌های اولیه
   final List<Map<String, dynamic>> dialogues = [
     {"speaker": "مادر", "text": "آرین! پاشو مادر، ساعت هفت و نیمه!", "portrait": "mother_portrait.png"},
     {"speaker": "آرین", "text": "مامان، پنج دقیقه دیگه...", "portrait": "arian_portrait.png"},
@@ -72,7 +71,7 @@ class _GameScreenState extends State<GameScreen> {
       });
     } else {
       setState(() {
-        showDialogue = false; // 🌟 وقتی تموم شد، بازی آزاد میشه
+        showDialogue = false; 
       });
     }
   }
@@ -85,7 +84,7 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // 🌟 دکمه‌های پول و سکه (بالای صفحه)
+          // 🌟 دکمه‌های پول و سکه
           Positioned(
             top: 20,
             right: 40,
@@ -126,7 +125,7 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
 
-          // 🌟 دکمه‌های حرکت (فقط وقتی دیالوگ بسته‌ست)
+          // 🌟 دکمه‌های حرکت
           if (!showDialogue)
             Positioned(
               bottom: 20,
@@ -151,7 +150,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 کادر دیالوگ
+          // 🌟 کادر دیالوگ (اصلاح شده)
           if (showDialogue)
             Positioned(
               bottom: 0,
@@ -159,9 +158,10 @@ class _GameScreenState extends State<GameScreen> {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.85),
-                  border: const Border(top: BorderSide(color: Colors.amber, width: 3)),
+                // 🌟 اینجا رنگ پس‌زمینه رو کاملاً مشکی و مات کردیم
+                decoration: const BoxDecoration(
+                  color: Colors.black, 
+                  border: Border(top: BorderSide(color: Colors.amber, width: 3)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
