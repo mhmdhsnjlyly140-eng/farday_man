@@ -29,9 +29,6 @@ class FardayeManApp extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 🌟 صفحه منوی اصلی
-// ==========================================
 class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({super.key});
 
@@ -127,7 +124,6 @@ class _GameScreenState extends State<GameScreen> {
   int dialogueIndex = 0;
   String currentSpeakerImage = 'arian_portrait.png'; 
 
-  // 🌟 لیست مناطق
   final List<String> areaNames = [
     'خیابان محله',
     'خیابان بازار',
@@ -137,46 +133,24 @@ class _GameScreenState extends State<GameScreen> {
     'خیابان مدرسه و کتابخانه'
   ];
 
-  // 🌟 لیست پسوندهای واقعی عکس‌ها (با توجه به آپلود تو)
   final List<String> areaImages = [
     'street_area_1.png',
     'street_area_2.png',
     'street_area_3.png',
     'street_area_4.png',
-    'street_area_5.jpg', // این jpg هست
+    'street_area_5.jpg',
     'street_area_6.png',
   ];
 
-  // 🌟 شناسه مناطق دور (که با تاکسی می‌رن)
   final List<int> taxiAreas = [4, 5]; 
   final int taxiCost = 40000;
 
   final List<Map<String, dynamic>> dialogues = [
-    {
-      "speaker": "مادر",
-      "text": "آرین! پاشو مادر، ساعت هفت و نیمه!",
-      "portrait": "mother_portrait.png"
-    },
-    {
-      "speaker": "آرین",
-      "text": "مامان، پنج دقیقه دیگه...",
-      "portrait": "arian_portrait.png"
-    },
-    {
-      "speaker": "مادر",
-      "text": "پنج دقیقه دیگه یعنی چی؟ مغازه رو کی می‌خوای باز کنی؟",
-      "portrait": "mother_portrait.png"
-    },
-    {
-      "speaker": "آرین",
-      "text": "الان بلند می‌شم!",
-      "portrait": "arian_portrait.png"
-    },
-    {
-      "speaker": "مادر",
-      "text": "صبحانه‌ات رو هم آماده کردم. زودتر بیا.",
-      "portrait": "mother_portrait.png"
-    },
+    {"speaker": "مادر", "text": "آرین! پاشو مادر، ساعت هفت و نیمه!", "portrait": "mother_portrait.png"},
+    {"speaker": "آرین", "text": "مامان، پنج دقیقه دیگه...", "portrait": "arian_portrait.png"},
+    {"speaker": "مادر", "text": "پنج دقیقه دیگه یعنی چی؟ مغازه رو کی می‌خوای باز کنی؟", "portrait": "mother_portrait.png"},
+    {"speaker": "آرین", "text": "الان بلند می‌شم!", "portrait": "arian_portrait.png"},
+    {"speaker": "مادر", "text": "صبحانه‌ات رو هم آماده کردم. زودتر بیا.", "portrait": "mother_portrait.png"},
   ];
 
   @override
@@ -215,7 +189,6 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  // 🌟 تابع درخواست تاکسی
   void _requestTaxi(int newArea) {
     showDialog(
       context: context,
@@ -224,7 +197,7 @@ class _GameScreenState extends State<GameScreen> {
           backgroundColor: const Color(0xFF1E1E2C),
           title: const Text("تاکسی", style: TextStyle(color: Colors.amber)),
           content: Text(
-            "برای رفتن به ${areaNames[newArea]} باید تاکسی بگیرید.\nهزینه: ${taxiCost.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} تومان",
+            "برای رفتن به ${areaNames[newArea]} باید تاکسی بگیرید.\nهزینه: ۴۰,۰۰۰ تومان",
             style: const TextStyle(color: Colors.white),
           ),
           actions: [
@@ -236,7 +209,9 @@ class _GameScreenState extends State<GameScreen> {
               onPressed: () {
                 if (gameState.buyPersonal(taxiCost)) {
                   Navigator.pop(context);
-                  _game.changeArea(newArea, areaImages[newArea]); // رفتن به منطقه جدید
+                  setState(() {
+                    _game.changeArea(newArea, areaImages[newArea]);
+                  });
                 } else {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -261,13 +236,11 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // 🌟 نمایش دو کیف پول
           Positioned(
             top: 20, 
             right: 40,
             child: Row(
               children: [
-                // صندوق مغازه
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -284,7 +257,6 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // جیب آرین
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -304,7 +276,6 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
 
-          // 🌟 دکمه‌های حرکت
           if (!showDialogue)
             Positioned(
               bottom: 20,
@@ -320,14 +291,16 @@ class _GameScreenState extends State<GameScreen> {
                     child: _buildControlButton(Icons.arrow_back_ios_new_rounded),
                   ),
                   GestureDetector(
-                    onTapDown: (_) => {
+                    onTapDown: (_) {
                       if (_game.isNearRightEdge) {
                         int newArea = _game.currentArea + 1;
                         if (newArea < areaImages.length) {
                           if (taxiAreas.contains(newArea)) {
-                            _requestTaxi(newArea); // درخواست تاکسی
+                            _requestTaxi(newArea);
                           } else {
-                            _game.changeArea(newArea, areaImages[newArea]); // پیاده برو
+                            setState(() {
+                              _game.changeArea(newArea, areaImages[newArea]);
+                            });
                           }
                         }
                       } else {
@@ -342,7 +315,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 کادر دیالوگ
           if (showDialogue)
             Positioned(
               bottom: 0,
