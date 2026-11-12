@@ -83,16 +83,10 @@ class ShopGame extends FlameGame {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
 
-    // 🌟 3. اضافه کردن بیلبوردها به دنیای بازی (دقیقاً بالای خونه‌ها)
-    // منطقه ۱: بالای مغازه لوازم‌التحریر (سمت چپ)
-    world.add(BillboardComponent(position: Vector2(300, 250))); 
-    
-    // منطقه ۲: بالای مغازه سوپرمارکت (وسط)
-    world.add(BillboardComponent(position: Vector2(1300, 250))); 
-    
-    // منطقه ۳: بالای خونه ویلایی (سمت راست)
-    world.add(BillboardComponent(position: Vector2(2300, 250))); 
-  }
+    // 🌟 3. اضافه کردن بیلبوردها به دنیای بازی (روی پنجره‌های طبقه دوم)
+world.add(BillboardComponent(position: Vector2(250, 160))); 
+world.add(BillboardComponent(position: Vector2(1250, 160))); 
+world.add(BillboardComponent(position: Vector2(2250, 160))); 
 
   @override
   void update(double dt) {
