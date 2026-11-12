@@ -53,32 +53,21 @@ class _GameScreenState extends State<GameScreen> {
   
   bool isInsideShop = false; 
 
-  bool _isLightOn = true;
-  late Timer _blinkTimer;
-
   @override
   void initState() {
     super.initState();
     _game = ShopGame();
+    _game.onBillboardTap = _showBillboardInfo;
     _loadGameData();
     
     _energyTimer = Timer.periodic(const Duration(minutes: 45), (timer) {
       setState(() {});
-    });
-
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (mounted) {
-        setState(() {
-          _isLightOn = !_isLightOn;
-        });
-      }
     });
   }
 
   @override
   void dispose() {
     _energyTimer?.cancel();
-    _blinkTimer.cancel();
     super.dispose();
   }
 
@@ -120,7 +109,6 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  // 🌟 پنجره‌ی اطلاعات تماس بیلبورد (بدون url_launcher)
   void _showBillboardInfo() {
     showDialog(
       context: context,
@@ -157,58 +145,6 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Widget _buildBillboard() {
-    return GestureDetector(
-      onTap: _showBillboardInfo,
-      child: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _isLightOn ? Colors.red : Colors.red.shade900,
-              boxShadow: _isLightOn 
-                ? [const BoxShadow(color: Colors.red, blurRadius: 15, spreadRadius: 5)]
-                : [],
-            ),
-          ),
-          const SizedBox(height: 5),
-          Container(
-            width: 140,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              border: Border.all(color: Colors.white, width: 2),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: const Column(
-              children: [
-                Text(
-                  "این فضا برای تبلیغات شماست!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  "برای رزرو کلیک کنید",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70, fontSize: 9),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 8,
-            height: 30,
-            color: Colors.grey.shade700,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,24 +152,6 @@ class _GameScreenState extends State<GameScreen> {
       body: Stack(
         children: [
           GameWidget(game: _game),
-
-          if (!isInsideShop && currentPhase == 1) ...[
-            Positioned(
-              top: 80,
-              left: 200,
-              child: _buildBillboard(),
-            ),
-            Positioned(
-              top: 50,
-              right: 250,
-              child: _buildBillboard(),
-            ),
-            Positioned(
-              top: 90,
-              right: 50,
-              child: _buildBillboard(),
-            ),
-          ],
 
           if (!isInsideShop)
             Positioned(
