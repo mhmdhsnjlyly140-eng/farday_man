@@ -48,7 +48,11 @@ class _GameScreenState extends State<GameScreen> {
   bool showDialogue = true;
   int dialogueIndex = 0;
   String currentSpeakerImage = 'mother_portrait.png';
+  
   List<Map<String, dynamic>> currentDialogues = StoryData.homeDialogue;
+  
+  bool isInsideShop = false; // 🌟 آیا داخل مغازه هستیم؟
+  bool isNearShop = false; // 🌟 آیا نزدیک مغازه هستیم؟
 
   @override
   void initState() {
@@ -56,7 +60,6 @@ class _GameScreenState extends State<GameScreen> {
     _game = ShopGame();
     _loadGameData();
     
-    // 🌟 تایمر برای آپدیت قلب‌ها هر ۴۵ دقیقه
     _energyTimer = Timer.periodic(const Duration(minutes: 45), (timer) {
       setState(() {});
     });
@@ -78,21 +81,33 @@ class _GameScreenState extends State<GameScreen> {
       setState(() {
         dialogueIndex++;
         currentSpeakerImage = currentDialogues[dialogueIndex]["portrait"];
-        _game.setBackground(currentDialogues[dialogueIndex]["bg"]);
       });
     } else {
       if (currentPhase == 0) {
         setState(() {
           currentPhase = 1;
           showDialogue = false;
-          _game.setBackground('street_area_1.png');
         });
-      } else {
-        setState(() {
+      } else if (currentPhase == 2) {
+         setState(() {
           showDialogue = false;
         });
       }
     }
+  }
+
+  // 🌟 شروع دیالوگ مغازه
+  void _startShopDialogue() {
+    setState(() {
+      isInsideShop = true;
+      currentPhase = 2;
+      showDialogue = true;
+      dialogueIndex = 0;
+      currentDialogues = StoryData.shopDialogue;
+      currentSpeakerImage = currentDialogues[0]["portrait"];
+      _game.moveLeft = false;
+      _game.moveRight = false;
+    });
   }
 
   @override
@@ -104,55 +119,54 @@ class _GameScreenState extends State<GameScreen> {
           GameWidget(game: _game),
 
           // 🌟 آیکون‌های انرژی، پول و سکه
-          Positioned(
-            top: 20,
-            right: 40,
-            child: Row(
-              children: [
-                // انرژی
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.redAccent, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)),
-                      const SizedBox(width: 5),
-                      Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // سکه
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
-                  },
-                  child: Container(
+          if (!isInsideShop)
+            Positioned(
+              top: 20,
+              right: 40,
+              child: Row(
+                children: [
+                  Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.amber, width: 1),
+                      border: Border.all(color: Colors.redAccent, width: 1),
                     ),
                     child: Row(
                       children: [
-                        Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 18)),
+                        Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)),
                         const SizedBox(width: 5),
-                        Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14)),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.amber, width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 18)),
+                          const SizedBox(width: 5),
+                          Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
           // 🌟 دکمه‌های حرکت
-          if (!showDialogue && currentPhase == 1)
+          if (!showDialogue && currentPhase == 1 && !isInsideShop)
             Positioned(
               bottom: 20,
               left: 30,
@@ -173,6 +187,19 @@ class _GameScreenState extends State<GameScreen> {
                     child: _buildControlButton(Icons.arrow_forward_ios_rounded),
                   ),
                 ],
+              ),
+            ),
+
+          // 🌟 دکمه ورود به مغازه
+          if (!showDialogue && currentPhase == 1 && !isInsideShop && _game.isNearShop())
+             Positioned(
+              bottom: 120,
+              left: 100,
+              child: ElevatedButton.icon(
+                onPressed: _startShopDialogue,
+                icon: const Icon(Icons.store, color: Colors.white),
+                label: const Text("ورود به مغازه"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
               ),
             ),
 
@@ -219,7 +246,7 @@ class _GameScreenState extends State<GameScreen> {
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                               child: Text(
                                 dialogueIndex == currentDialogues.length - 1 
-                                  ? (currentPhase == 0 ? "برو به خیابون" : "پایان")
+                                  ? (currentPhase == 0 ? "برو به خیابون" : (currentPhase == 2 ? "برو به خیابون" : "پایان"))
                                   : "ادامه",
                                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                               ),
