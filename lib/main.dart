@@ -4,6 +4,8 @@ import 'package:flame/game.dart';
 import 'game/shop_game.dart';
 import 'game_state.dart';
 import 'story_data.dart';
+import 'shop_screen.dart';
+import 'dart:async';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,16 +42,12 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
+  Timer? _energyTimer;
 
-  // 🌟 فازها: 0 = خانه (داستان)، 1 = خیابون (بازی آزاد)
   int currentPhase = 0; 
-  
-  // 🌟 وضعیت دیالوگ
   bool showDialogue = true;
   int dialogueIndex = 0;
   String currentSpeakerImage = 'mother_portrait.png';
-  
-  // 🌟 لیست دیالوگ‌های فاز فعلی
   List<Map<String, dynamic>> currentDialogues = StoryData.homeDialogue;
 
   @override
@@ -57,6 +55,17 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     _game = ShopGame();
     _loadGameData();
+    
+    // 🌟 تایمر برای آپدیت قلب‌ها هر ۴۵ دقیقه
+    _energyTimer = Timer.periodic(const Duration(minutes: 45), (timer) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _energyTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadGameData() async {
@@ -69,19 +78,16 @@ class _GameScreenState extends State<GameScreen> {
       setState(() {
         dialogueIndex++;
         currentSpeakerImage = currentDialogues[dialogueIndex]["portrait"];
-        // 🌟 تغییر پس‌زمینه بر اساس دیالوگ (اتاق یا آشپزخانه)
         _game.setBackground(currentDialogues[dialogueIndex]["bg"]);
       });
     } else {
-      // 🌟 پایان دیالوگ‌های خانه -> رفتن به خیابون
       if (currentPhase == 0) {
         setState(() {
-          currentPhase = 1; // برو به فاز خیابون
-          showDialogue = false; // بستن دیالوگ
-          _game.setBackground('street_area_1.png'); // پس‌زمینه خیابون
+          currentPhase = 1;
+          showDialogue = false;
+          _game.setBackground('street_area_1.png');
         });
       } else {
-        // پایان دیالوگ‌های خیابون
         setState(() {
           showDialogue = false;
         });
@@ -97,50 +103,55 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // 🌟 نمایش پول و سکه (بالای صفحه)
+          // 🌟 آیکون‌های انرژی، پول و سکه
           Positioned(
             top: 20,
             right: 40,
             child: Row(
               children: [
-                // صندوق مغازه
+                // انرژی
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.blueAccent, width: 1),
+                    border: Border.all(color: Colors.redAccent, width: 1),
                   ),
                   child: Row(
                     children: [
-                      Image.asset('assets/images/item_cash_register.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.store, color: Colors.blueAccent, size: 18)),
+                      Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)),
                       const SizedBox(width: 5),
-                      Text('${gameState.shopMoney}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                      Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14)),
                     ],
                   ),
                 ),
                 const SizedBox(width: 10),
-                // جیب آرین
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.amber, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset('assets/images/wallet_icon.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.person, color: Colors.amber, size: 18)),
-                      const SizedBox(width: 5),
-                      Text('${gameState.arianMoney}', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                    ],
+                // سکه
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.amber, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 18)),
+                        const SizedBox(width: 5),
+                        Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // 🌟 دکمه‌های حرکت (فقط توی فاز خیابون)
+          // 🌟 دکمه‌های حرکت
           if (!showDialogue && currentPhase == 1)
             Positioned(
               bottom: 20,
