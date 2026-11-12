@@ -16,7 +16,6 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   void initState() {
     super.initState();
-    // 🌟 هر ۵ ثانیه قیمت نوسان می‌کنه
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       setState(() {
         gameState.fluctuateCoinPrice();
@@ -46,7 +45,6 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // قیمت لحظه‌ای سکه
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -58,21 +56,13 @@ class _ShopScreenState extends State<ShopScreen> {
                 children: [
                   const Text('قیمت لحظه‌ای سکه:', style: TextStyle(color: Colors.white70, fontSize: 18)),
                   const SizedBox(height: 10),
-                  Text(
-                    '${gameState.currentCoinPrice} تومان',
-                    style: const TextStyle(color: Colors.amber, fontSize: 30, fontWeight: FontWeight.bold),
-                  ),
+                  Text('${gameState.currentCoinPrice} تومان', style: const TextStyle(color: Colors.amber, fontSize: 30, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
             const SizedBox(height: 30),
-
-            // سکه‌های آرین
             Text('سکه‌های شما: ${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 20)),
-
             const SizedBox(height: 30),
-
-            // دکمه‌های خرید و فروش
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -80,13 +70,9 @@ class _ShopScreenState extends State<ShopScreen> {
                   onPressed: () {
                     setState(() {
                       if (gameState.buyCoin()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('سکه خریداری شد!')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سکه خریداری شد!')));
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('پول کافی نداری!')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('پول کافی نداری!')));
                       }
                     });
                   },
@@ -99,13 +85,9 @@ class _ShopScreenState extends State<ShopScreen> {
                     setState(() {
                       if (gameState.coins > 0) {
                         gameState.sellCoin();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('سکه فروخته شد!')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سکه فروخته شد!')));
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('سکه‌ای برای فروش نداری!')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سکه‌ای برای فروش نداری!')));
                       }
                     });
                   },
