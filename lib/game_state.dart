@@ -10,15 +10,12 @@ class GameState {
   int coins = 0;
   int day = 1;
 
-  // 🌟 سیستم انرژی
   int maxEnergy = 5;
   int currentEnergy = 5;
   DateTime? lastEnergyUpdate;
 
-  // 🌟 قیمت لحظه‌ای سکه (طلا)
   int currentCoinPrice = 1700000;
 
-  // 🌟 ذخیره و لود
   Future<void> saveGame() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('shopMoney', shopMoney);
@@ -38,7 +35,7 @@ class GameState {
     day = prefs.getInt('day') ?? 1;
     currentEnergy = prefs.getInt('currentEnergy') ?? 5;
     currentCoinPrice = prefs.getInt('currentCoinPrice') ?? 1700000;
-
+    
     String? lastUpdateStr = prefs.getString('lastEnergyUpdate');
     if (lastUpdateStr != null) {
       lastEnergyUpdate = DateTime.parse(lastUpdateStr);
@@ -46,17 +43,15 @@ class GameState {
     }
   }
 
-  // 🌟 پر شدن انرژی (هر ۴۵ دقیقه ۱ قلب)
   void _regenEnergy() {
     if (lastEnergyUpdate == null) {
       lastEnergyUpdate = DateTime.now();
       return;
     }
-
     final now = DateTime.now();
     final difference = now.difference(lastEnergyUpdate!);
     final minutesPassed = difference.inMinutes;
-    final energyToAdd = minutesPassed ~/ 45; // هر ۴۵ دقیقه ۱ قلب
+    final energyToAdd = minutesPassed ~/ 45;
 
     if (energyToAdd > 0) {
       currentEnergy = (currentEnergy + energyToAdd).clamp(0, maxEnergy);
@@ -64,7 +59,6 @@ class GameState {
     }
   }
 
-  // 🌟 مصرف انرژی
   bool useEnergy(int amount) {
     _regenEnergy();
     if (currentEnergy >= amount) {
@@ -75,14 +69,12 @@ class GameState {
     return false;
   }
 
-  // 🌟 نوسان قیمت سکه
   void fluctuateCoinPrice() {
-    int change = (DateTime.now().millisecondsSinceEpoch % 20000) - 10000; // بین -۱۰ تا +۱۰ هزار
+    int change = (DateTime.now().millisecondsSinceEpoch % 20000) - 10000;
     currentCoinPrice = (currentCoinPrice + change).clamp(1600000, 1850000);
     saveGame();
   }
 
-  // 🌟 خرید سکه (طلا)
   bool buyCoin() {
     if (arianMoney >= currentCoinPrice) {
       arianMoney -= currentCoinPrice;
@@ -93,7 +85,6 @@ class GameState {
     return false;
   }
 
-  // 🌟 فروش سکه
   void sellCoin() {
     if (coins > 0) {
       coins--;
