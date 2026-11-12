@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   flame: ^1.18.0
   shared_preferences: ^2.2.2
+  url_launcher: ^6.2.4 # 👈 این خط برای باز کردن لینک روبیکا
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
