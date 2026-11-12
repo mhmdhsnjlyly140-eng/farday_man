@@ -51,8 +51,7 @@ class _GameScreenState extends State<GameScreen> {
   
   List<Map<String, dynamic>> currentDialogues = StoryData.homeDialogue;
   
-  bool isInsideShop = false; // 🌟 آیا داخل مغازه هستیم؟
-  bool isNearShop = false; // 🌟 آیا نزدیک مغازه هستیم؟
+  bool isInsideShop = false; 
 
   @override
   void initState() {
@@ -96,7 +95,6 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  // 🌟 شروع دیالوگ مغازه
   void _startShopDialogue() {
     setState(() {
       isInsideShop = true;
@@ -190,8 +188,8 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 دکمه ورود به مغازه
-          if (!showDialogue && currentPhase == 1 && !isInsideShop && _game.isNearShop())
+          // 🌟 دکمه ورود به مغازه (همیشه فعال)
+          if (!showDialogue && !isInsideShop)
              Positioned(
               bottom: 120,
               left: 100,
