@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
-import 'package:url_launcher/url_launcher.dart'; // 👈 اضافه شد
 import 'game/shop_game.dart';
 import 'game_state.dart';
 import 'story_data.dart';
@@ -54,7 +53,6 @@ class _GameScreenState extends State<GameScreen> {
   
   bool isInsideShop = false; 
 
-  // 🌟 انیمیشن چشمک زدن چراغ بیلبوردها
   bool _isLightOn = true;
   late Timer _blinkTimer;
 
@@ -122,17 +120,7 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  // 🌟 تابع باز کردن لینک روبیکا
-  Future<void> _openRubika() async {
-    final Uri url = Uri.parse('https://rubika.ir/support_1i');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      debugPrint('نمی‌توان لینک را باز کرد');
-    }
-  }
-
-  // 🌟 پنجره‌ی اطلاعات تماس بیلبورد
+  // 🌟 پنجره‌ی اطلاعات تماس بیلبورد (بدون url_launcher)
   void _showBillboardInfo() {
     showDialog(
       context: context,
@@ -155,6 +143,7 @@ class _GameScreenState extends State<GameScreen> {
               Text("⏰ ساعات پاسخگویی: ۷ تا ۹ شب", style: TextStyle(color: Colors.white70, fontSize: 14)),
               SizedBox(height: 15),
               Text("💬 روبیکا (پشتیبانی):", style: TextStyle(color: Colors.white70)),
+              Text("rubika.ir/support_1i", style: TextStyle(color: Colors.blueAccent, fontSize: 14)),
             ],
           ),
           actions: [
@@ -162,27 +151,17 @@ class _GameScreenState extends State<GameScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text("بستن", style: TextStyle(color: Colors.redAccent)),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _openRubika(); // 👈 باز کردن روبیکا
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-              child: const Text("ورود به روبیکا"),
-            ),
           ],
         );
       },
     );
   }
 
-  // 🌟 ویجت بیلبورد (برای استفاده‌ی مکرر)
   Widget _buildBillboard() {
     return GestureDetector(
       onTap: _showBillboardInfo,
       child: Column(
         children: [
-          // چراغ چشمک زن
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: 20,
@@ -196,9 +175,8 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
           const SizedBox(height: 5),
-          // بدنه بیلبورد
           Container(
-            width: 140, // کمی کوچک‌تر برای جا شدن ۳ تا
+            width: 140,
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.black,
@@ -221,7 +199,6 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
           ),
-          // پایه بیلبورد
           Container(
             width: 8,
             height: 30,
@@ -240,26 +217,24 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // 🌟 سه تا بیلبورد روی خونه‌ها
           if (!isInsideShop && currentPhase == 1) ...[
             Positioned(
               top: 80,
-              left: 200, // بیلبورد اول (سمت چپ)
+              left: 200,
               child: _buildBillboard(),
             ),
             Positioned(
               top: 50,
-              right: 250, // بیلبورد دوم (وسط)
+              right: 250,
               child: _buildBillboard(),
             ),
             Positioned(
               top: 90,
-              right: 50, // بیلبورد سوم (سمت راست)
+              right: 50,
               child: _buildBillboard(),
             ),
           ],
 
-          // 🌟 آیکون‌های انرژی، پول و سکه
           if (!isInsideShop)
             Positioned(
               top: 20,
@@ -306,7 +281,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 دکمه‌های حرکت
           if (!showDialogue && currentPhase == 1 && !isInsideShop)
             Positioned(
               bottom: 20,
@@ -331,7 +305,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 دکمه ورود به مغازه
           if (!showDialogue && !isInsideShop)
              Positioned(
               bottom: 120,
@@ -344,7 +317,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 کادر دیالوگ
           if (showDialogue)
             Positioned(
               bottom: 0,
