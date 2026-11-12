@@ -83,10 +83,11 @@ class ShopGame extends FlameGame {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
 
-    // 🌟 3. اضافه کردن بیلبوردها به دنیای بازی (روی پنجره‌های طبقه دوم)
-world.add(BillboardComponent(position: Vector2(250, 160))); 
-world.add(BillboardComponent(position: Vector2(1250, 160))); 
-world.add(BillboardComponent(position: Vector2(2250, 160))); 
+    // 3. اضافه کردن بیلبوردها به دنیای بازی (روی پنجره‌های طبقه دوم)
+    world.add(BillboardComponent(position: Vector2(250, 160)));
+    world.add(BillboardComponent(position: Vector2(1250, 160)));
+    world.add(BillboardComponent(position: Vector2(2250, 160)));
+  }
 
   @override
   void update(double dt) {
@@ -176,6 +177,6 @@ class BillboardComponent extends PositionComponent with TapCallbacks, HasGameRef
 
   @override
   void onTapDown(TapDownEvent event) {
-    (game as ShopGame).onBillboardTap?.call();
+    game.onBillboardTap?.call();
   }
 }
