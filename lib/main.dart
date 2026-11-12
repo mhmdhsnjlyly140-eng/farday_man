@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
+import 'package:url_launcher/url_launcher.dart'; // 👈 اضافه شد
 import 'game/shop_game.dart';
 import 'game_state.dart';
 import 'story_data.dart';
@@ -53,6 +54,10 @@ class _GameScreenState extends State<GameScreen> {
   
   bool isInsideShop = false; 
 
+  // 🌟 انیمیشن چشمک زدن چراغ بیلبوردها
+  bool _isLightOn = true;
+  late Timer _blinkTimer;
+
   @override
   void initState() {
     super.initState();
@@ -62,11 +67,20 @@ class _GameScreenState extends State<GameScreen> {
     _energyTimer = Timer.periodic(const Duration(minutes: 45), (timer) {
       setState(() {});
     });
+
+    _blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {
+          _isLightOn = !_isLightOn;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _energyTimer?.cancel();
+    _blinkTimer.cancel();
     super.dispose();
   }
 
@@ -108,6 +122,116 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  // 🌟 تابع باز کردن لینک روبیکا
+  Future<void> _openRubika() async {
+    final Uri url = Uri.parse('https://rubika.ir/support_1i');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint('نمی‌توان لینک را باز کرد');
+    }
+  }
+
+  // 🌟 پنجره‌ی اطلاعات تماس بیلبورد
+  void _showBillboardInfo() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2C),
+          title: const Text("تبلیغات در بازی", style: TextStyle(color: Colors.amber)),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("صاحب کسب‌وکار هستید؟", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              Text("دوست دارید محصول یا خدمات خودتون رو به بازیکنان «فردای من» معرفی کنید؟", style: TextStyle(color: Colors.white70)),
+              SizedBox(height: 20),
+              Text("راه‌های ارتباط با ما:", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              Text("📞 شماره تماس: 09052380706", style: TextStyle(color: Colors.white, fontSize: 16)),
+              SizedBox(height: 5),
+              Text("⏰ ساعات پاسخگویی: ۷ تا ۹ شب", style: TextStyle(color: Colors.white70, fontSize: 14)),
+              SizedBox(height: 15),
+              Text("💬 روبیکا (پشتیبانی):", style: TextStyle(color: Colors.white70)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("بستن", style: TextStyle(color: Colors.redAccent)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _openRubika(); // 👈 باز کردن روبیکا
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+              child: const Text("ورود به روبیکا"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // 🌟 ویجت بیلبورد (برای استفاده‌ی مکرر)
+  Widget _buildBillboard() {
+    return GestureDetector(
+      onTap: _showBillboardInfo,
+      child: Column(
+        children: [
+          // چراغ چشمک زن
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isLightOn ? Colors.red : Colors.red.shade900,
+              boxShadow: _isLightOn 
+                ? [const BoxShadow(color: Colors.red, blurRadius: 15, spreadRadius: 5)]
+                : [],
+            ),
+          ),
+          const SizedBox(height: 5),
+          // بدنه بیلبورد
+          Container(
+            width: 140, // کمی کوچک‌تر برای جا شدن ۳ تا
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              border: Border.all(color: Colors.white, width: 2),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: const Column(
+              children: [
+                Text(
+                  "این فضا برای تبلیغات شماست!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  "برای رزرو کلیک کنید",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 9),
+                ),
+              ],
+            ),
+          ),
+          // پایه بیلبورد
+          Container(
+            width: 8,
+            height: 30,
+            color: Colors.grey.shade700,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,6 +239,25 @@ class _GameScreenState extends State<GameScreen> {
       body: Stack(
         children: [
           GameWidget(game: _game),
+
+          // 🌟 سه تا بیلبورد روی خونه‌ها
+          if (!isInsideShop && currentPhase == 1) ...[
+            Positioned(
+              top: 80,
+              left: 200, // بیلبورد اول (سمت چپ)
+              child: _buildBillboard(),
+            ),
+            Positioned(
+              top: 50,
+              right: 250, // بیلبورد دوم (وسط)
+              child: _buildBillboard(),
+            ),
+            Positioned(
+              top: 90,
+              right: 50, // بیلبورد سوم (سمت راست)
+              child: _buildBillboard(),
+            ),
+          ],
 
           // 🌟 آیکون‌های انرژی، پول و سکه
           if (!isInsideShop)
@@ -188,7 +331,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          // 🌟 دکمه ورود به مغازه (همیشه فعال)
+          // 🌟 دکمه ورود به مغازه
           if (!showDialogue && !isInsideShop)
              Positioned(
               bottom: 120,
