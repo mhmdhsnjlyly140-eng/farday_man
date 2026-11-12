@@ -126,7 +126,7 @@ class ShopGame extends FlameGame {
 }
 
 // 🌟 کامپوننت بیلبورد (داخل Flame)
-class BillboardComponent extends PositionComponent with TapCallbacks {
+class BillboardComponent extends PositionComponent with TapCallbacks, HasGameReference<ShopGame> {
   double _timer = 0;
   bool _isTextVisible = true;
   late TextComponent _textComponent;
