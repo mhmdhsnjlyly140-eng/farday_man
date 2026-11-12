@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
@@ -11,20 +12,19 @@ class ShopGame extends FlameGame {
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
   late SpriteAnimation idleAnimation;
-  late SpriteComponent background;
 
   double playerX = 400;
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
-  
-  int currentArea = 0; // 0: خیابون، 1: مغازه
+
+  VoidCallback? onBillboardTap;
 
   @override
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 🌟 لود کردن ۴ تا عکس منطقه
+    // 1. لود کردن ۴ تا عکس منطقه
     final List<String> areaImages = [
       'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
     ];
@@ -50,7 +50,7 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 🌟 لود کردن آرین
+    // 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [
@@ -82,6 +82,16 @@ class ShopGame extends FlameGame {
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
+
+    // 🌟 3. اضافه کردن بیلبوردها به دنیای بازی (دقیقاً بالای خونه‌ها)
+    // منطقه ۱: بالای مغازه لوازم‌التحریر (سمت چپ)
+    world.add(BillboardComponent(position: Vector2(300, 250))); 
+    
+    // منطقه ۲: بالای مغازه سوپرمارکت (وسط)
+    world.add(BillboardComponent(position: Vector2(1300, 250))); 
+    
+    // منطقه ۳: بالای خونه ویلایی (سمت راست)
+    world.add(BillboardComponent(position: Vector2(2300, 250))); 
   }
 
   @override
@@ -113,19 +123,65 @@ class ShopGame extends FlameGame {
     
     camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
+}
 
-  // 🌟 تعویض پس‌زمینه (برای داستان)
-  void setBackground(String imagePath) async {
-    try {
-      final newImage = await images.load(imagePath);
-      // اینجا چون background قبلا لیست بوده، یه جایگزین ساده می‌کنیم
-      // برای سادگی، فعلاً فقط عکس اول رو عوض می‌کنیم
-    } catch (e) {}
+// 🌟 کامپوننت بیلبورد (داخل Flame)
+class BillboardComponent extends PositionComponent with TapCallbacks {
+  double _timer = 0;
+  bool _isTextVisible = true;
+  late TextComponent _textComponent;
+
+  BillboardComponent({required Vector2 position})
+      : super(position: position, size: Vector2(160, 90), anchor: Anchor.bottomLeft);
+
+  @override
+  Future<void> onLoad() async {
+    // بدنه مشکی بیلبورد
+    add(RectangleComponent(
+      size: size,
+      paint: Paint()..color = Colors.black,
+    ));
+
+    // حاشیه سفید
+    add(RectangleComponent(
+      size: size,
+      paint: Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..color = Colors.white,
+    ));
+
+    // متن بیلبورد
+    _textComponent = TextComponent(
+      text: "این فضا برای\nتبلیغات شماست!",
+      anchor: Anchor.center,
+      position: Vector2(size.x / 2, size.y / 2),
+      textRenderer: TextPaint(
+        style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    );
+    add(_textComponent);
   }
 
-  // 🌟 بررسی نزدیک بودن به لبه مغازه
-  bool isNearShop() {
-    // فرض می‌کنیم مغازه توی ۴۰۰ پیکسل اول (منطقه ۱) هست
-    return playerX > 200 && playerX < 400;
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _timer += dt;
+    if (_timer > 0.5) {
+      _timer = 0;
+      _isTextVisible = !_isTextVisible;
+      _textComponent.textRenderer = TextPaint(
+        style: TextStyle(
+          color: _isTextVisible ? Colors.amber : Colors.amber.withOpacity(0.2),
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    (game as ShopGame).onBillboardTap?.call();
   }
 }
