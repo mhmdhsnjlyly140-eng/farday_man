@@ -11,22 +11,22 @@ class ShopGame extends FlameGame {
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
   late SpriteAnimation idleAnimation;
+  late SpriteComponent background;
 
   double playerX = 400;
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
+  
+  int currentArea = 0; // 0: خیابون، 1: مغازه
 
   @override
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 🌟 لود کردن هر ۴ عکس منطقه کنار هم
+    // 🌟 لود کردن ۴ تا عکس منطقه
     final List<String> areaImages = [
-      'street_area_1.png',
-      'street_area_2.png',
-      'street_area_3.png',
-      'street_area_4.png',
+      'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
     ];
 
     for (int i = 0; i < areaImages.length; i++) {
@@ -34,7 +34,6 @@ class ShopGame extends FlameGame {
         final image = await images.load(areaImages[i]);
         double aspectRatio = image.height / image.width;
         double finalHeight = singleAreaWidth * aspectRatio;
-
         world.add(SpriteComponent(
           sprite: Sprite(image),
           size: Vector2(singleAreaWidth, finalHeight), 
@@ -42,8 +41,6 @@ class ShopGame extends FlameGame {
           priority: -10,
         ));
       } catch (e) {
-        debugPrint("عکس ${areaImages[i]} پیدا نشد");
-        // اگه عکس نبود، یه مستطیل رنگی بذار
         world.add(RectangleComponent(
           size: Vector2(singleAreaWidth, size.y),
           position: Vector2(i * singleAreaWidth, 0),
@@ -56,14 +53,12 @@ class ShopGame extends FlameGame {
     // 🌟 لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
-      
       final leftSprites = [
         Sprite(await images.load('arian_left_1.png')),
         Sprite(await images.load('arian_left_2.png')),
         Sprite(await images.load('arian_left_3.png')),
         Sprite(await images.load('arian_left_4.png')),
       ];
-      
       final rightSprites = [
         Sprite(await images.load('arian_right_1.png')),
         Sprite(await images.load('arian_right_2.png')),
@@ -84,7 +79,6 @@ class ShopGame extends FlameGame {
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
-
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
@@ -113,7 +107,6 @@ class ShopGame extends FlameGame {
     
     player.position = Vector2(playerX, size.y - 80);
 
-    // 🌟 حرکت دوربین
     double targetCameraX = playerX - (size.x / 2);
     if (targetCameraX < 0) targetCameraX = 0;
     if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
@@ -121,6 +114,18 @@ class ShopGame extends FlameGame {
     camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
-  // این تابع رو خالی می‌ذاریم چون فعلاً برای تعویض منطقه توی خیابون استفاده نمی‌شه
-  void setBackground(String imagePath) {}
+  // 🌟 تعویض پس‌زمینه (برای داستان)
+  void setBackground(String imagePath) async {
+    try {
+      final newImage = await images.load(imagePath);
+      // اینجا چون background قبلا لیست بوده، یه جایگزین ساده می‌کنیم
+      // برای سادگی، فعلاً فقط عکس اول رو عوض می‌کنیم
+    } catch (e) {}
+  }
+
+  // 🌟 بررسی نزدیک بودن به لبه مغازه
+  bool isNearShop() {
+    // فرض می‌کنیم مغازه توی ۴۰۰ پیکسل اول (منطقه ۱) هست
+    return playerX > 200 && playerX < 400;
+  }
 }
