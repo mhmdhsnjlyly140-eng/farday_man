@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flame/game.dart';
 import 'game/shop_game.dart';
 import 'game_state.dart';
+import 'story_data.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,17 +41,16 @@ class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
 
+  // 🌟 فازها: 0 = خانه (داستان)، 1 = خیابون (بازی آزاد)
+  int currentPhase = 0; 
+  
+  // 🌟 وضعیت دیالوگ
   bool showDialogue = true;
   int dialogueIndex = 0;
   String currentSpeakerImage = 'mother_portrait.png';
-
-  final List<Map<String, dynamic>> dialogues = [
-    {"speaker": "مادر", "text": "آرین! پاشو مادر، ساعت هفت و نیمه!", "portrait": "mother_portrait.png"},
-    {"speaker": "آرین", "text": "مامان، پنج دقیقه دیگه...", "portrait": "arian_portrait.png"},
-    {"speaker": "مادر", "text": "پنج دقیقه دیگه یعنی چی؟ مغازه رو کی می‌خوای باز کنی؟", "portrait": "mother_portrait.png"},
-    {"speaker": "آرین", "text": "الان بلند می‌شم!", "portrait": "arian_portrait.png"},
-    {"speaker": "مادر", "text": "صبحانه‌ات رو هم آماده کردم. زودتر بیا.", "portrait": "mother_portrait.png"},
-  ];
+  
+  // 🌟 لیست دیالوگ‌های فاز فعلی
+  List<Map<String, dynamic>> currentDialogues = StoryData.homeDialogue;
 
   @override
   void initState() {
@@ -65,15 +65,27 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _nextDialogue() {
-    if (dialogueIndex < dialogues.length - 1) {
+    if (dialogueIndex < currentDialogues.length - 1) {
       setState(() {
         dialogueIndex++;
-        currentSpeakerImage = dialogues[dialogueIndex]["portrait"];
+        currentSpeakerImage = currentDialogues[dialogueIndex]["portrait"];
+        // 🌟 تغییر پس‌زمینه بر اساس دیالوگ (اتاق یا آشپزخانه)
+        _game.setBackground(currentDialogues[dialogueIndex]["bg"]);
       });
     } else {
-      setState(() {
-        showDialogue = false;
-      });
+      // 🌟 پایان دیالوگ‌های خانه -> رفتن به خیابون
+      if (currentPhase == 0) {
+        setState(() {
+          currentPhase = 1; // برو به فاز خیابون
+          showDialogue = false; // بستن دیالوگ
+          _game.setBackground('street_area_1.png'); // پس‌زمینه خیابون
+        });
+      } else {
+        // پایان دیالوگ‌های خیابون
+        setState(() {
+          showDialogue = false;
+        });
+      }
     }
   }
 
@@ -85,12 +97,13 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          // 🌟 دکمه‌های پول
+          // 🌟 نمایش پول و سکه (بالای صفحه)
           Positioned(
             top: 20,
             right: 40,
             child: Row(
               children: [
+                // صندوق مغازه
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -100,13 +113,14 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.store, color: Colors.blueAccent, size: 18),
+                      Image.asset('assets/images/item_cash_register.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.store, color: Colors.blueAccent, size: 18)),
                       const SizedBox(width: 5),
                       Text('${gameState.shopMoney}', style: const TextStyle(color: Colors.white, fontSize: 14)),
                     ],
                   ),
                 ),
                 const SizedBox(width: 10),
+                // جیب آرین
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -116,7 +130,7 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.person, color: Colors.amber, size: 18),
+                      Image.asset('assets/images/wallet_icon.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.person, color: Colors.amber, size: 18)),
                       const SizedBox(width: 5),
                       Text('${gameState.arianMoney}', style: const TextStyle(color: Colors.white, fontSize: 14)),
                     ],
@@ -126,8 +140,8 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
 
-          // 🌟 دکمه‌های حرکت
-          if (!showDialogue)
+          // 🌟 دکمه‌های حرکت (فقط توی فاز خیابون)
+          if (!showDialogue && currentPhase == 1)
             Positioned(
               bottom: 20,
               left: 30,
@@ -183,9 +197,9 @@ class _GameScreenState extends State<GameScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(dialogues[dialogueIndex]["speaker"]!, style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text(currentDialogues[dialogueIndex]["speaker"]!, style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 5),
-                          Text(dialogues[dialogueIndex]["text"]!, style: const TextStyle(color: Colors.white, fontSize: 18)),
+                          Text(currentDialogues[dialogueIndex]["text"]!, style: const TextStyle(color: Colors.white, fontSize: 18)),
                           const SizedBox(height: 10),
                           Align(
                             alignment: Alignment.centerLeft,
@@ -193,7 +207,9 @@ class _GameScreenState extends State<GameScreen> {
                               onPressed: _nextDialogue,
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                               child: Text(
-                                dialogueIndex == dialogues.length - 1 ? "شروع بازی" : "ادامه",
+                                dialogueIndex == currentDialogues.length - 1 
+                                  ? (currentPhase == 0 ? "برو به خیابون" : "پایان")
+                                  : "ادامه",
                                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                               ),
                             ),
