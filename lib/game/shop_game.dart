@@ -19,18 +19,28 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. لود عکس پس‌زمینه اول
+    // 1. لود عکس پس‌زمینه
     try {
       final bgImage = await images.load('street_area_1.png');
+      
+      // 🌟 محاسبه ارتفاع بر اساس نسبت ابعاد عکس تا کشیده نشه
+      double aspectRatio = bgImage.height / bgImage.width;
+      double finalHeight = size.x * aspectRatio; // عرض رو برابر با عرض گوشی می‌ذاریم
+
       background = SpriteComponent(
         sprite: Sprite(bgImage),
-        size: size,
+        size: Vector2(size.x, finalHeight), // عرض و ارتفاع دقیق
         position: Vector2(0, 0),
         priority: -10,
       );
       world.add(background);
     } catch (e) {
       debugPrint("عکس پس‌زمینه پیدا نشد");
+      world.add(RectangleComponent(
+        size: size,
+        paint: Paint()..color = Colors.grey.shade800,
+        priority: -10,
+      ));
     }
 
     // 2. لود آرین
@@ -59,7 +69,6 @@ class ShopGame extends FlameGame {
         anchor: Anchor.bottomCenter,
       );
 
-      // 🌟 تنظیم ارتفاع برای قرارگیری روی پیاده‌رو
       player.position = Vector2(playerX, size.y - 80);
       player.priority = 10;
       world.add(player);
@@ -80,7 +89,7 @@ class ShopGame extends FlameGame {
     } else if (moveRight) {
       isMoving = true;
       playerX += 250 * dt;
-      if (playerX > 4000 - 70) playerX = 4000 - 70; // محدودیت دنیا
+      if (playerX > size.x - 70) playerX = size.x - 70; // محدودیت در صفحه
       if (player.animation != walkRightAnimation) player.animation = walkRightAnimation;
     } else {
       if (isMoving) {
@@ -91,10 +100,10 @@ class ShopGame extends FlameGame {
 
     player.position = Vector2(playerX, size.y - 80);
 
-    // 🌟 حرکت دوربین
+    // 🌟 حرکت دوربین (چون عکس به اندازه صفحه است، دوربین نیاز نیست، ولی برای آینده نگه می‌داریم)
     double targetCameraX = playerX - (size.x / 2);
     if (targetCameraX < 0) targetCameraX = 0;
-    if (targetCameraX > 4000 - size.x) targetCameraX = 4000 - size.x;
+    if (targetCameraX > size.x * 4 - size.x) targetCameraX = size.x * 4 - size.x;
     camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
