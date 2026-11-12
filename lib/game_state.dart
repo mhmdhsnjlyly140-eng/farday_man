@@ -26,15 +26,6 @@ class GameState {
     day = prefs.getInt('day') ?? 1;
   }
 
-  Future<void> resetGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    shopMoney = 100000;
-    arianMoney = 50000;
-    coins = 0;
-    day = 1;
-  }
-
   void addSaleIncome(int totalAmount) {
     int shopShare = (totalAmount * 0.8).toInt();
     int arianShare = totalAmount - shopShare;
