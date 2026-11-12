@@ -15,19 +15,16 @@ class ShopGame extends FlameGame {
   bool moveRight = false;
   bool isMoving = false;
 
-  int currentArea = 0;
-  bool get isNearRightEdge => playerX >= size.x - 90;
-
   @override
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. لود عکس اول
+    // 1. لود عکس پس‌زمینه اول
     try {
       final bgImage = await images.load('street_area_1.png');
       background = SpriteComponent(
         sprite: Sprite(bgImage),
-        size: size, 
+        size: size,
         position: Vector2(0, 0),
         priority: -10,
       );
@@ -39,14 +36,12 @@ class ShopGame extends FlameGame {
     // 2. لود آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
-      
       final leftSprites = [
         Sprite(await images.load('arian_left_1.png')),
         Sprite(await images.load('arian_left_2.png')),
         Sprite(await images.load('arian_left_3.png')),
         Sprite(await images.load('arian_left_4.png')),
       ];
-      
       final rightSprites = [
         Sprite(await images.load('arian_right_1.png')),
         Sprite(await images.load('arian_right_2.png')),
@@ -59,15 +54,15 @@ class ShopGame extends FlameGame {
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
       player = SpriteAnimationComponent(
-        animation: idleAnimation, 
-        size: Vector2(110, 170), 
+        animation: idleAnimation,
+        size: Vector2(110, 170),
         anchor: Anchor.bottomCenter,
       );
-      
-      player.position = Vector2(playerX, size.y - 70); 
+
+      // 🌟 تنظیم ارتفاع برای قرارگیری روی پیاده‌رو
+      player.position = Vector2(playerX, size.y - 80);
       player.priority = 10;
       world.add(player);
-
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
@@ -85,7 +80,7 @@ class ShopGame extends FlameGame {
     } else if (moveRight) {
       isMoving = true;
       playerX += 250 * dt;
-      if (playerX > size.x - 70) playerX = size.x - 70;
+      if (playerX > 4000 - 70) playerX = 4000 - 70; // محدودیت دنیا
       if (player.animation != walkRightAnimation) player.animation = walkRightAnimation;
     } else {
       if (isMoving) {
@@ -93,19 +88,22 @@ class ShopGame extends FlameGame {
         player.animation = idleAnimation;
       }
     }
-    
-    player.position = Vector2(playerX, size.y - 70);
+
+    player.position = Vector2(playerX, size.y - 80);
+
+    // 🌟 حرکت دوربین
+    double targetCameraX = playerX - (size.x / 2);
+    if (targetCameraX < 0) targetCameraX = 0;
+    if (targetCameraX > 4000 - size.x) targetCameraX = 4000 - size.x;
+    camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 
-  // 🌟 تابع تغییر منطقه
-  void changeArea(int newArea, String imagePath) async {
-    currentArea = newArea;
-    playerX = size.x / 2; // آرین بره وسط
-    player.position = Vector2(playerX, size.y - 70);
-
+  void changeAreaImage(String imagePath) async {
     try {
       final newImage = await images.load(imagePath);
       background.sprite = Sprite(newImage);
+      playerX = size.x / 2;
+      player.position = Vector2(playerX, size.y - 80);
     } catch (e) {
       debugPrint("عکس $imagePath پیدا نشد");
     }
