@@ -1,274 +1,225 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flame/game.dart';
+import 'package:flame/game_widget.dart';
+
 import 'game/shop_game.dart';
 import 'game_state.dart';
-import 'story_data.dart';
 import 'shop_screen.dart';
-import 'dart:async';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  runApp(const FardayeManApp());
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+  );
+
+  runApp(const MyGameApp());
 }
 
-class FardayeManApp extends StatelessWidget {
-  const FardayeManApp({super.key});
+class MyGameApp extends StatelessWidget {
+  const MyGameApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'فردای من', debugShowCheckedModeBanner: false, theme: ThemeData(brightness: Brightness.dark), home: const MainMenuScreen());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'فردای من',
+      theme: ThemeData(
+        fontFamily: 'Arial',
+        useMaterial3: true,
+      ),
+      home: const GamePage(),
+    );
   }
 }
 
-// 🌟 منوی اصلی
-class MainMenuScreen extends StatelessWidget {
-  const MainMenuScreen({super.key});
+class GamePage extends StatefulWidget {
+  const GamePage({super.key});
+
+  @override
+  State<GamePage> createState() => _GamePageState();
+}
+
+class _GamePageState extends State<GamePage> {
+  late final Future<GameState> stateFuture = GameState.load();
+
+  ShopGame? game;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(child: Image.asset('assets/images/app_icon.png', fit: BoxFit.cover, errorBuilder: (c,e,s) => Container(color: const Color(0xFF1E1E2C)))),
-          Positioned.fill(child: Container(color: Colors.black.withOpacity(0.4))),
-          Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('فردای من', style: TextStyle(color: Colors.amber, fontSize: 70, fontWeight: FontWeight.w900, shadows: [Shadow(color: Colors.black, blurRadius: 20, offset: Offset(0, 5)), Shadow(color: Colors.blueAccent, blurRadius: 10)])),
-                  const SizedBox(height: 5),
-                  const Text('فردای من رو خودم می‌سازم', style: TextStyle(color: Colors.white70, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 50),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    _buildMenuButton(text: 'شروع', icon: Icons.play_arrow_rounded, isGreen: true, onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const GameScreen()))),
-                    const SizedBox(width: 20),
-                    _buildMenuButton(text: 'تنظیمات', icon: Icons.settings, isGreen: false, onPressed: () {}),
-                  ]),
-                  const SizedBox(height: 20),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    _buildMenuButton(text: 'ادامه', icon: Icons.history, isGreen: false, onPressed: () { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سیستم ذخیره‌سازی به زودی اضافه می‌شود!'))); }),
-                    const SizedBox(width: 20),
-                    _buildMenuButton(text: 'خروج', icon: Icons.exit_to_app_rounded, isGreen: false, onPressed: () => SystemNavigator.pop()),
-                  ]),
-                ],
-              ),
+    return FutureBuilder<GameState>(
+      future: stateFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+          );
+        }
 
-  Widget _buildMenuButton({required String text, required IconData icon, required bool isGreen, required VoidCallback onPressed}) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        width: 180,
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        decoration: BoxDecoration(color: isGreen ? Colors.green.withOpacity(0.7) : Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(15), border: Border.all(color: isGreen ? Colors.greenAccent.withOpacity(0.5) : Colors.white.withOpacity(0.3), width: 2), boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 5))]),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: Colors.white, size: 28), const SizedBox(width: 10), Text(text, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))]),
-      ),
-    );
-  }
-}
+        final gameState = snapshot.data!;
+        game ??= ShopGame();
 
-// 🌟 صفحه بازی
-class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
-  @override
-  State<GameScreen> createState() => _GameScreenState();
-}
-
-class _GameScreenState extends State<GameScreen> {
-  late ShopGame _game;
-  final gameState = GameState();
-  Timer? _energyTimer;
-
-  int currentPhase = 0; // 0: خیابون، 1: مغازه
-  bool showDialogue = true;
-  int dialogueIndex = 0;
-  String currentSpeakerImage = 'mother_portrait.png';
-  List<Map<String, dynamic>> currentDialogues = StoryData.homeDialogue;
-
-  @override
-  void initState() {
-    super.initState();
-    _game = ShopGame();
-    _game.onShopEnter = _enterShop;
-    _game.onHomeEnter = _enterHome;
-    _game.onTaxiStandTap = _openTaxiMenu;
-    _game.onBillboardTap = _showBillboardInfo;
-    _loadGameData();
-    _energyTimer = Timer.periodic(const Duration(minutes: 45), (timer) { setState(() {}); });
-  }
-
-  @override
-  void dispose() { _energyTimer?.cancel(); super.dispose(); }
-
-  Future<void> _loadGameData() async { await gameState.loadGame(); setState(() {}); }
-
-  void _nextDialogue() {
-    if (dialogueIndex < currentDialogues.length - 1) {
-      setState(() { dialogueIndex++; currentSpeakerImage = currentDialogues[dialogueIndex]["portrait"]; });
-    } else { setState(() { showDialogue = false; }); }
-  }
-
-  void _enterShop() {
-    setState(() {
-      currentPhase = 1;
-      showDialogue = true;
-      dialogueIndex = 0;
-      currentDialogues = StoryData.shopDialogue;
-      currentSpeakerImage = currentDialogues[0]["portrait"];
-      _game.moveLeft = false;
-      _game.moveRight = false;
-    });
-  }
-
-  void _enterHome() {
-    setState(() {
-      _game.moveLeft = false;
-      _game.moveRight = false;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('وارد خونه شدی! (هال، اتاق، آشپزخانه به زودی)')));
-    });
-  }
-
-  // 🌟 منوی تاکسی
-  void _openTaxiMenu() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
-          title: const Text("تاکسی", style: TextStyle(color: Colors.amber)),
-          content: const Text("به کجا می‌خوای بری؟ (هزینه: ۴۰,۰۰۰ تومان)", style: TextStyle(color: Colors.white)),
-          actions: [
-            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(1); }, child: const Text("خیابان بهار (نانوایی و ساعت‌سازی)", style: TextStyle(color: Colors.white))),
-            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(2); }, child: const Text("خیابان پونه‌زار (مدرسه و کتابخانه)", style: TextStyle(color: Colors.white))),
-            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(3); }, child: const Text("خیابان شاهد (طلا فروشی، کافه، لباس)", style: TextStyle(color: Colors.white))),
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("لغو", style: TextStyle(color: Colors.redAccent))),
-          ],
-        );
-      },
-    );
-  }
-
-  void _requestTaxi(int regionId) {
-    if (gameState.buyPersonal(40000)) {
-      _game.moveLeft = false;
-      _game.moveRight = false;
-      _game.goToRegion(regionId);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('پول کافی نداری!')));
-    }
-  }
-
-  // 🌟 پنجره بیلبورد
-  void _showBillboardInfo() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
-          title: const Text("تبلیغات در بازی", style: TextStyle(color: Colors.amber)),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        return Scaffold(
+          body: Stack(
             children: [
-              Text("صاحب کسب‌وکار هستید؟", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
-              Text("دوست دارید محصول یا خدمات خودتون رو به بازیکنان معرفی کنید؟", style: TextStyle(color: Colors.white70)),
-              SizedBox(height: 20),
-              Text("📞 شماره تماس: 09052380706", style: TextStyle(color: Colors.white, fontSize: 16)),
-              Text("⏰ ساعات پاسخگویی: ۷ تا ۹ شب", style: TextStyle(color: Colors.white70, fontSize: 14)),
-              SizedBox(height: 15),
-              Text("💬 روبیکا: rubika.ir/support_1i", style: TextStyle(color: Colors.blueAccent, fontSize: 14)),
+              Positioned.fill(
+                child: GameWidget<ShopGame>(
+                  game: game!,
+                ),
+              ),
+
+              // نوار انرژی و سکه
+              Positioned(
+                top: 12,
+                right: 18,
+                child: AnimatedBuilder(
+                  animation: gameState,
+                  builder: (context, child) {
+                    return Row(
+                      children: [
+                        _statusBox(
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                'assets/images/icon_energy.png',
+                                width: 25,
+                                height: 25,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${gameState.energy}/5',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 10),
+
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ShopScreen(
+                                  gameState: gameState,
+                                ),
+                              ),
+                            );
+                          },
+                          child: _statusBox(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/images/icon_coin.png',
+                                  width: 25,
+                                  height: 25,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${gameState.coins}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+              // دکمه حرکت چپ
+              Positioned(
+                bottom: 25,
+                left: 55,
+                child: _movementButton(
+                  icon: Icons.arrow_back_ios_new,
+                  onDown: game!.moveLeft,
+                  onUp: game!.stopPlayer,
+                ),
+              ),
+
+              // دکمه حرکت راست
+              Positioned(
+                bottom: 25,
+                right: 55,
+                child: _movementButton(
+                  icon: Icons.arrow_forward_ios,
+                  onDown: game!.moveRight,
+                  onUp: game!.stopPlayer,
+                ),
+              ),
             ],
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("بستن", style: TextStyle(color: Colors.redAccent)))],
         );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF2C3E50),
-      body: Stack(
-        children: [
-          GameWidget(game: _game),
-          Positioned(
-            top: 20, right: 40,
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.redAccent, width: 1)),
-                  child: Row(children: [Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)), const SizedBox(width: 5), Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14))]),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () { Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen())); },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.amber, width: 1)),
-                    child: Row(children: [Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.star, color: Colors.amber, size: 18)), const SizedBox(width: 5), Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14))]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!showDialogue && currentPhase == 0)
-            Positioned(
-              bottom: 20, left: 30, right: 30,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(onTapDown: (_) => _game.moveLeft = true, onTapUp: (_) => _game.moveLeft = false, onTapCancel: () => _game.moveLeft = false, child: _buildControlButton(Icons.arrow_back_ios_new_rounded)),
-                  GestureDetector(onTapDown: (_) => _game.moveRight = true, onTapUp: (_) => _game.moveRight = false, onTapCancel: () => _game.moveRight = false, child: _buildControlButton(Icons.arrow_forward_ios_rounded)),
-                ],
-              ),
-            ),
-          if (currentPhase != 0)
-            Positioned(top: 20, left: 20, child: ElevatedButton.icon(onPressed: () { setState(() { currentPhase = 0; showDialogue = false; }); }, icon: const Icon(Icons.exit_to_app, color: Colors.white), label: const Text("خروج"), style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent))),
-          if (showDialogue)
-            Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(color: Colors.black, border: Border(top: BorderSide(color: Colors.amber, width: 3))),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(width: 80, height: 80, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.amber, width: 2)), child: ClipOval(child: Image.asset('assets/images/$currentSpeakerImage', fit: BoxFit.cover, errorBuilder: (c,e,s) => const Icon(Icons.person, color: Colors.white, size: 40)))),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(currentDialogues[dialogueIndex]["speaker"]!, style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 5),
-                          Text(currentDialogues[dialogueIndex]["text"]!, style: const TextStyle(color: Colors.white, fontSize: 18)),
-                          const SizedBox(height: 10),
-                          Align(alignment: Alignment.centerLeft, child: ElevatedButton(onPressed: _nextDialogue, style: ElevatedButton.styleFrom(backgroundColor: Colors.amber), child: Text(dialogueIndex == currentDialogues.length - 1 ? "پایان" : "ادامه", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)))),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
+  Widget _statusBox({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: 10,
       ),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+      ),
+      child: child,
     );
   }
 
-  Widget _buildControlButton(IconData icon) {
-    return Container(width: 70, height: 70, decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle, border: Border.all(color: Colors.white24, width: 2)), child: Icon(icon, color: Colors.white, size: 35));
+  Widget _movementButton({
+    required IconData icon,
+    required VoidCallback onDown,
+    required VoidCallback onUp,
+  }) {
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (_) => onDown(),
+      onPointerUp: (_) => onUp(),
+      onPointerCancel: (_) => onUp(),
+      child: Container(
+        width: 105,
+        height: 105,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.55),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 3,
+          ),
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 42,
+        ),
+      ),
+    );
   }
 }
