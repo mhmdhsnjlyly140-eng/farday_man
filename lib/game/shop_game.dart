@@ -27,10 +27,7 @@ class ShopGame extends FlameGame {
 
     // 🌟 1. لود کردن ۴ منطقه اصلی
     final List<String> areaImages = [
-      'street_area_1.png',
-      'street_area_2.png',
-      'street_area_3.png',
-      'street_area_4.png',
+      'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
     ];
 
     for (int i = 0; i < areaImages.length; i++) {
@@ -45,41 +42,21 @@ class ShopGame extends FlameGame {
           priority: -10,
         ));
       } catch (e) {
-        world.add(RectangleComponent(
-          size: Vector2(singleAreaWidth, size.y),
-          position: Vector2(i * singleAreaWidth, 0),
-          paint: Paint()..color = Colors.grey.shade800,
-          priority: -10,
-        ));
+        world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(i * singleAreaWidth, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
       }
     }
 
     // 🌟 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
-      final leftSprites = [
-        Sprite(await images.load('arian_left_1.png')),
-        Sprite(await images.load('arian_left_2.png')),
-        Sprite(await images.load('arian_left_3.png')),
-        Sprite(await images.load('arian_left_4.png')),
-      ];
-      final rightSprites = [
-        Sprite(await images.load('arian_right_1.png')),
-        Sprite(await images.load('arian_right_2.png')),
-        Sprite(await images.load('arian_right_3.png')),
-        Sprite(await images.load('arian_right_4.png')),
-      ];
+      final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
+      final rightSprites = [Sprite(await images.load('arian_right_1.png')), Sprite(await images.load('arian_right_2.png')), Sprite(await images.load('arian_right_3.png')), Sprite(await images.load('arian_right_4.png'))];
 
       idleAnimation = SpriteAnimation.spriteList([idleSprite], stepTime: 1.0);
       walkLeftAnimation = SpriteAnimation.spriteList(leftSprites, stepTime: 0.1, loop: true);
       walkRightAnimation = SpriteAnimation.spriteList(rightSprites, stepTime: 0.1, loop: true);
 
-      player = SpriteAnimationComponent(
-        animation: idleAnimation, 
-        size: Vector2(110, 170), 
-        anchor: Anchor.bottomCenter,
-      );
-      
+      player = SpriteAnimationComponent(animation: idleAnimation, size: Vector2(110, 170), anchor: Anchor.bottomCenter);
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
@@ -87,17 +64,31 @@ class ShopGame extends FlameGame {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
 
-    // 🌟 3. اضافه کردن بیلبورد (روی دیوار خونه توی منطقه ۱)
-    world.add(BillboardComponent(
-      position: Vector2(700, 160), 
-      onTap: () => onBillboardTap?.call(),
-    ));
+    // 🌟 3. بیلبورد (با عکس واقعی + دکمه)
+    try {
+      final billboardImage = await images.load('billboard_asset.png');
+      world.add(BillboardComponent(
+        position: Vector2(700, 100), // مختصات بیلبورد روی دیوار
+        size: Vector2(200, 100),
+        image: billboardImage,
+        onTap: () => onBillboardTap?.call(),
+      ));
+    } catch (e) {
+      debugPrint("عکس بیلبورد پیدا نشد");
+    }
 
-    // 🌟 4. اضافه کردن ایستگاه تاکسی (روی پیاده‌رو توی منطقه ۲)
-    world.add(TaxiStandComponent(
-      position: Vector2(1500, size.y - 160), 
-      onTap: () => onTaxiStandTap?.call(),
-    ));
+    // 🌟 4. ایستگاه تاکسی (با عکس واقعی + دکمه)
+    try {
+      final taxiImage = await images.load('taxi_stand.png');
+      world.add(TaxiStandComponent(
+        position: Vector2(1400, size.y - 200), // مختصات ایستگاه روی پیاده‌رو
+        size: Vector2(120, 150),
+        image: taxiImage,
+        onTap: () => onTaxiStandTap?.call(),
+      ));
+    } catch (e) {
+      debugPrint("عکس ایستگاه تاکسی پیدا نشد");
+    }
   }
 
   @override
@@ -130,66 +121,32 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 کامپوننت بیلبورد
+// 🌟 کامپوننت بیلبورد (کل عکس دکمه است)
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
-  double _timer = 0;
-  bool _isTextVisible = true;
-  late TextComponent _textComponent;
+  final Image image;
 
-  BillboardComponent({required Vector2 position, required this.onTap})
-      : super(position: position, size: Vector2(160, 90), anchor: Anchor.bottomLeft);
+  BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) : super(position: position, size: size);
 
   @override
   Future<void> onLoad() async {
-    add(RectangleComponent(size: size, paint: Paint()..color = Colors.black));
-    add(RectangleComponent(size: size, paint: Paint()..style = PaintingStyle.stroke..strokeWidth = 4..color = Colors.white));
-    
-    _textComponent = TextComponent(
-      text: "این فضا برای\nتبلیغات شماست!",
-      anchor: Anchor.center,
-      position: Vector2(size.x / 2, size.y / 2),
-      textRenderer: TextPaint(style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold)),
-    );
-    add(_textComponent);
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _timer += dt;
-    if (_timer > 0.5) {
-      _timer = 0;
-      _isTextVisible = !_isTextVisible;
-      _textComponent.textRenderer = TextPaint(
-        style: TextStyle(
-          color: _isTextVisible ? Colors.amber : Colors.amber.withOpacity(0.2),
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    }
+    add(SpriteComponent(sprite: Sprite(image), size: size));
   }
 
   @override
   void onTapDown(TapDownEvent event) => onTap();
 }
 
-// 🌟 کامپوننت ایستگاه تاکسی
+// 🌟 کامپوننت ایستگاه تاکسی (کل عکس دکمه است)
 class TaxiStandComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
-  TaxiStandComponent({required Vector2 position, required this.onTap})
-      : super(position: position, size: Vector2(60, 80), anchor: Anchor.center);
+  final Image image;
+
+  TaxiStandComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) : super(position: position, size: size);
 
   @override
   Future<void> onLoad() async {
-    add(RectangleComponent(size: size, paint: Paint()..color = Colors.blueGrey));
-    add(TextComponent(
-      text: "🚕",
-      anchor: Anchor.center,
-      position: Vector2(size.x / 2, size.y / 2),
-      textRenderer: TextPaint(style: const TextStyle(color: Colors.white, fontSize: 30)),
-    ));
+    add(SpriteComponent(sprite: Sprite(image), size: size));
   }
 
   @override
