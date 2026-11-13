@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -25,7 +26,7 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 🌟 1. لود کردن ۴ منطقه اصلی
+    // 1. لود کردن ۴ منطقه اصلی
     final List<String> areaImages = [
       'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
     ];
@@ -46,7 +47,7 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 🌟 2. لود کردن آرین
+    // 2. لود کردن آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -64,11 +65,11 @@ class ShopGame extends FlameGame {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
 
-    // 🌟 3. بیلبورد (با عکس واقعی + دکمه)
+    // 3. بیلبورد (با عکس واقعی + دکمه)
     try {
       final billboardImage = await images.load('billboard_asset.png');
       world.add(BillboardComponent(
-        position: Vector2(700, 100), // مختصات بیلبورد روی دیوار
+        position: Vector2(700, 100),
         size: Vector2(200, 100),
         image: billboardImage,
         onTap: () => onBillboardTap?.call(),
@@ -77,11 +78,11 @@ class ShopGame extends FlameGame {
       debugPrint("عکس بیلبورد پیدا نشد");
     }
 
-    // 🌟 4. ایستگاه تاکسی (با عکس واقعی + دکمه)
+    // 4. ایستگاه تاکسی (با عکس واقعی + دکمه)
     try {
       final taxiImage = await images.load('taxi_stand.png');
       world.add(TaxiStandComponent(
-        position: Vector2(1400, size.y - 200), // مختصات ایستگاه روی پیاده‌رو
+        position: Vector2(1400, size.y - 200),
         size: Vector2(120, 150),
         image: taxiImage,
         onTap: () => onTaxiStandTap?.call(),
@@ -121,10 +122,10 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 کامپوننت بیلبورد (کل عکس دکمه است)
+// 🌟 بیلبورد با عکس واقعی
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
-  final Image image;
+  final ui.Image image;
 
   BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) : super(position: position, size: size);
 
@@ -137,10 +138,10 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   void onTapDown(TapDownEvent event) => onTap();
 }
 
-// 🌟 کامپوننت ایستگاه تاکسی (کل عکس دکمه است)
+// 🌟 ایستگاه تاکسی با عکس واقعی
 class TaxiStandComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
-  final Image image;
+  final ui.Image image;
 
   TaxiStandComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) : super(position: position, size: size);
 
