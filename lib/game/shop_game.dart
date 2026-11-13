@@ -5,7 +5,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
 class ShopGame extends FlameGame {
-  final double worldWidth = 4000; 
+  final double worldWidth = 7000; 
   final double singleAreaWidth = 1000;
   
   late SpriteAnimationComponent player;
@@ -18,15 +18,24 @@ class ShopGame extends FlameGame {
   bool moveRight = false;
   bool isMoving = false;
 
-  VoidCallback? onBillboardTap;
+  // 🌟 دکمه‌های تعامل
+  VoidCallback? onShopEnter;
+  VoidCallback? onHomeEnter;
+  VoidCallback? onTaxiEnter;
 
   @override
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
-    // 1. لود کردن ۴ تا عکس منطقه
+    // 🌟 لود کردن ۷ منطقه (۴ منطقه قبلی + منطقه طلافروشی + منطقه بهار + منطقه مدرسه)
     final List<String> areaImages = [
-      'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
+      'street_area_1.png',
+      'street_area_2.png',
+      'street_area_3.png',
+      'street_area_4.png',
+      'street_area_7.png', // منطقه طلافروشی و کافه
+      'street_area_5.jpg', // منطقه بهار (نانوایی و ساعت)
+      'street_area_6.png', // منطقه مدرسه و کتابخانه
     ];
 
     for (int i = 0; i < areaImages.length; i++) {
@@ -83,10 +92,22 @@ class ShopGame extends FlameGame {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
     }
 
-    // 3. اضافه کردن بیلبوردها به دنیای بازی (روی پنجره‌های طبقه دوم)
-    world.add(BillboardComponent(position: Vector2(250, 160)));
-    world.add(BillboardComponent(position: Vector2(1250, 160)));
-    world.add(BillboardComponent(position: Vector2(2250, 160)));
+    // 🌟 3. دکمه‌های تعامل (روی در مغازه، خونه، ایستگاه تاکسی)
+    world.add(EnterButtonComponent(
+      position: Vector2(350, size.y - 160),
+      onTap: () => onShopEnter?.call(),
+    ));
+
+    world.add(EnterButtonComponent(
+      position: Vector2(2500, size.y - 160),
+      onTap: () => onHomeEnter?.call(),
+    ));
+    
+    // دکمه تاکسی (در منطقه ۱ یا ۲)
+    world.add(EnterButtonComponent(
+      position: Vector2(1800, size.y - 160), 
+      onTap: () => onTaxiEnter?.call(),
+    ));
   }
 
   @override
@@ -120,63 +141,28 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 کامپوننت بیلبورد (داخل Flame)
-class BillboardComponent extends PositionComponent with TapCallbacks, HasGameReference<ShopGame> {
-  double _timer = 0;
-  bool _isTextVisible = true;
-  late TextComponent _textComponent;
+// 🌟 کامپوننت دکمه‌ی ورود
+class EnterButtonComponent extends PositionComponent with TapCallbacks {
+  final VoidCallback onTap;
 
-  BillboardComponent({required Vector2 position})
-      : super(position: position, size: Vector2(160, 90), anchor: Anchor.bottomLeft);
+  EnterButtonComponent({required Vector2 position, required this.onTap})
+      : super(position: position, size: Vector2(40, 40), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
-    // بدنه مشکی بیلبورد
-    add(RectangleComponent(
-      size: size,
-      paint: Paint()..color = Colors.black,
+    add(CircleComponent(
+      radius: 20,
+      paint: Paint()..color = Colors.white.withOpacity(0.8),
     ));
-
-    // حاشیه سفید
     add(RectangleComponent(
-      size: size,
-      paint: Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4
-        ..color = Colors.white,
+      size: Vector2(10, 10),
+      position: Vector2(15, 15),
+      paint: Paint()..color = Colors.blueAccent,
     ));
-
-    // متن بیلبورد
-    _textComponent = TextComponent(
-      text: "این فضا برای\nتبلیغات شماست!",
-      anchor: Anchor.center,
-      position: Vector2(size.x / 2, size.y / 2),
-      textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-    add(_textComponent);
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _timer += dt;
-    if (_timer > 0.5) {
-      _timer = 0;
-      _isTextVisible = !_isTextVisible;
-      _textComponent.textRenderer = TextPaint(
-        style: TextStyle(
-          color: _isTextVisible ? Colors.amber : Colors.amber.withOpacity(0.2),
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    }
   }
 
   @override
   void onTapDown(TapDownEvent event) {
-    game.onBillboardTap?.call();
+    onTap();
   }
 }
