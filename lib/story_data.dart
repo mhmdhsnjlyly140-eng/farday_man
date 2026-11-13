@@ -1,5 +1,5 @@
 class StoryData {
-  // 🌟 دیالوگ‌های خانه (اتاق و آشپزخانه)
+  // 🌟 دیالوگ‌های اتاق آرین و آشپزخانه
   static final List<Map<String, dynamic>> homeDialogue = [
     {"speaker": "مادر", "text": "آرین! پاشو مادر، ساعت هفت و نیمه!", "portrait": "mother_portrait.png", "bg": "arian_bedroom.png"},
     {"speaker": "آرین", "text": "مامان، پنج دقیقه دیگه...", "portrait": "arian_portrait.png", "bg": "arian_bedroom.png"},
@@ -10,7 +10,7 @@ class StoryData {
     {"speaker": "مادر", "text": "باشه مادر. فقط امشب زودتر بیا خونه، یه صحبتی باهات دارم.", "portrait": "mother_portrait.png", "bg": "kitchen_bg.png"},
   ];
 
-  // 🌟 دیالوگ‌های توی مغازه (وقتی وارد شدی)
+  // 🌟 دیالوگ‌های داخل مغازه
   static final List<Map<String, dynamic>> shopDialogue = [
     {"speaker": "آرین", "text": "خب، یه روز کاری دیگه شروع شد!", "portrait": "arian_portrait.png", "bg": "shop_bg.png"},
     {"speaker": "مشتری", "text": "سلام، خسته نباشید. یه دفتر صد برگ، دو تا خودکار آبی و یه مداد می‌خواستم.", "portrait": "customer_young_man_portrait.png", "bg": "shop_bg.png"},
