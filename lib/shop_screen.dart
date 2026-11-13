@@ -1,100 +1,122 @@
+
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'game_state.dart';
-import 'dart:async';
 
 class ShopScreen extends StatefulWidget {
-  const ShopScreen({super.key});
+  final GameState gameState;
+
+  const ShopScreen({
+    super.key,
+    required this.gameState,
+  });
 
   @override
   State<ShopScreen> createState() => _ShopScreenState();
 }
 
 class _ShopScreenState extends State<ShopScreen> {
-  final gameState = GameState();
-  Timer? _timer;
+  final Random random = Random();
+
+  Timer? timer;
+
+  int coinPrice = 75000000;
+  int change = 0;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      setState(() {
-        gameState.fluctuateCoinPrice();
-      });
-    });
+
+    timer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) {
+        if (!mounted) return;
+
+        setState(() {
+          change = random.nextInt(1000000) - 500000;
+          coinPrice = max(1000000, coinPrice + change);
+        });
+      },
+    );
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    timer?.cancel();
     super.dispose();
+  }
+
+  String formatPrice(int value) {
+    return value.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]},',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E2C),
+      backgroundColor: const Color(0xFF17243D),
       appBar: AppBar(
-        title: const Text('طلا فروشی', style: TextStyle(color: Colors.amber)),
-        backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: const Color(0xFF263B5C),
+        foregroundColor: Colors.white,
+        title: const Text('طلافروشی'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber, width: 2),
-              ),
-              child: Column(
-                children: [
-                  const Text('قیمت لحظه‌ای سکه:', style: TextStyle(color: Colors.white70, fontSize: 18)),
-                  const SizedBox(height: 10),
-                  Text('${gameState.currentCoinPrice} تومان', style: const TextStyle(color: Colors.amber, fontSize: 30, fontWeight: FontWeight.bold)),
-                ],
+            Image.asset(
+              'assets/images/icon_coin.png',
+              width: 90,
+              height: 90,
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'قیمت لحظه‌ای سکه',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
               ),
             ),
-            const SizedBox(height: 30),
-            Text('سکه‌های شما: ${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 20)),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      if (gameState.buyCoin()) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سکه خریداری شد!')));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('پول کافی نداری!')));
-                      }
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('خرید سکه', style: TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      if (gameState.coins > 0) {
-                        gameState.sellCoin();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سکه فروخته شد!')));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سکه‌ای برای فروش نداری!')));
-                      }
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                  child: const Text('فروش سکه', style: TextStyle(fontSize: 18)),
-                ),
-              ],
+
+            const SizedBox(height: 15),
+
+            Text(
+              '${formatPrice(coinPrice)} تومان',
+              style: const TextStyle(
+                color: Colors.amber,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            Text(
+              change >= 0
+                  ? 'افزایش قیمت: ${formatPrice(change)}'
+                  : 'کاهش قیمت: ${formatPrice(change.abs())}',
+              style: TextStyle(
+                color: change >= 0
+                    ? Colors.greenAccent
+                    : Colors.redAccent,
+                fontSize: 18,
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            Text(
+              'موجودی سکه: ${widget.gameState.coins}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+              ),
             ),
           ],
         ),
