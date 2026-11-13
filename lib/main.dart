@@ -27,11 +27,90 @@ class FardayeManApp extends StatelessWidget {
       title: 'فردای من',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(brightness: Brightness.dark),
-      home: const GameScreen(),
+      home: const MainMenuScreen(),
     );
   }
 }
 
+// 🌟 منوی اصلی
+class MainMenuScreen extends StatelessWidget {
+  const MainMenuScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/app_icon.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(color: const Color(0xFF1E1E2C)),
+            ),
+          ),
+          Positioned.fill(child: Container(color: Colors.black.withOpacity(0.4))),
+          Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('فردای من', style: TextStyle(color: Colors.amber, fontSize: 70, fontWeight: FontWeight.w900, shadows: [Shadow(color: Colors.black, blurRadius: 20, offset: Offset(0, 5)), Shadow(color: Colors.blueAccent, blurRadius: 10)])),
+                  const SizedBox(height: 5),
+                  const Text('فردای من رو خودم می‌سازم', style: TextStyle(color: Colors.white70, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 50),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    _buildMenuButton(text: 'شروع', icon: Icons.play_arrow_rounded, isGreen: true, onPressed: () => _startGame(context)),
+                    const SizedBox(width: 20),
+                    _buildMenuButton(text: 'تنظیمات', icon: Icons.settings, isGreen: false, onPressed: () {}),
+                  ]),
+                  const SizedBox(height: 20),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    _buildMenuButton(text: 'ادامه', icon: Icons.history, isGreen: false, onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سیستم ذخیره‌سازی به زودی اضافه می‌شود!')));
+                    }),
+                    const SizedBox(width: 20),
+                    _buildMenuButton(text: 'خروج', icon: Icons.exit_to_app_rounded, isGreen: false, onPressed: () => SystemNavigator.pop()),
+                  ]),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startGame(BuildContext context) {
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const GameScreen()));
+  }
+
+  Widget _buildMenuButton({required String text, required IconData icon, required bool isGreen, required VoidCallback onPressed}) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        width: 180,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: isGreen ? Colors.green.withOpacity(0.7) : Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: isGreen ? Colors.greenAccent.withOpacity(0.5) : Colors.white.withOpacity(0.3), width: 2),
+          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 5))],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            Text(text, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 🌟 صفحه بازی
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -44,20 +123,20 @@ class _GameScreenState extends State<GameScreen> {
   final gameState = GameState();
   Timer? _energyTimer;
 
-  int currentPhase = 0; 
+  int currentPhase = 0; // 0: خیابون، 1: مغازه، 2: خونه
   bool showDialogue = true;
   int dialogueIndex = 0;
   String currentSpeakerImage = 'mother_portrait.png';
   
   List<Map<String, dynamic>> currentDialogues = StoryData.homeDialogue;
-  
-  bool isInsideShop = false; 
 
   @override
   void initState() {
     super.initState();
     _game = ShopGame();
-    _game.onBillboardTap = _showBillboardInfo;
+    _game.onShopEnter = _enterShop;
+    _game.onHomeEnter = _enterHome;
+    _game.onTaxiEnter = _requestTaxi;
     _loadGameData();
     
     _energyTimer = Timer.periodic(const Duration(minutes: 45), (timer) {
@@ -83,23 +162,15 @@ class _GameScreenState extends State<GameScreen> {
         currentSpeakerImage = currentDialogues[dialogueIndex]["portrait"];
       });
     } else {
-      if (currentPhase == 0) {
-        setState(() {
-          currentPhase = 1;
-          showDialogue = false;
-        });
-      } else if (currentPhase == 2) {
-         setState(() {
-          showDialogue = false;
-        });
-      }
+      setState(() {
+        showDialogue = false;
+      });
     }
   }
 
-  void _startShopDialogue() {
+  void _enterShop() {
     setState(() {
-      isInsideShop = true;
-      currentPhase = 2;
+      currentPhase = 1;
       showDialogue = true;
       dialogueIndex = 0;
       currentDialogues = StoryData.shopDialogue;
@@ -109,35 +180,48 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _showBillboardInfo() {
+  void _enterHome() {
+    setState(() {
+      currentPhase = 2;
+      _game.moveLeft = false;
+      _game.moveRight = false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('وارد خونه شدی! (هال، اتاق، آشپزخانه به زودی)')),
+      );
+    });
+  }
+
+  // 🌟 درخواست تاکسی
+  void _requestTaxi() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E2C),
-          title: const Text("تبلیغات در بازی", style: TextStyle(color: Colors.amber)),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("صاحب کسب‌وکار هستید؟", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
-              Text("دوست دارید محصول یا خدمات خودتون رو به بازیکنان «فردای من» معرفی کنید؟", style: TextStyle(color: Colors.white70)),
-              SizedBox(height: 20),
-              Text("راه‌های ارتباط با ما:", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
-              Text("📞 شماره تماس: 09052380706", style: TextStyle(color: Colors.white, fontSize: 16)),
-              SizedBox(height: 5),
-              Text("⏰ ساعات پاسخگویی: ۷ تا ۹ شب", style: TextStyle(color: Colors.white70, fontSize: 14)),
-              SizedBox(height: 15),
-              Text("💬 روبیکا (پشتیبانی):", style: TextStyle(color: Colors.white70)),
-              Text("rubika.ir/support_1i", style: TextStyle(color: Colors.blueAccent, fontSize: 14)),
-            ],
-          ),
+          title: const Text("تاکسی", style: TextStyle(color: Colors.amber)),
+          content: const Text("برای رفتن به این منطقه باید ۴۰,۰۰۰ تومان پرداخت کنید. آیا موافقید؟", style: TextStyle(color: Colors.white)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("بستن", style: TextStyle(color: Colors.redAccent)),
+              child: const Text("لغو", style: TextStyle(color: Colors.redAccent)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (gameState.buyPersonal(40000)) {
+                  Navigator.pop(context);
+                  _game.moveLeft = false;
+                  _game.moveRight = false;
+                  _game.playerX = 5000; // بردن به منطقه جدید
+                  setState(() {});
+                } else {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('پول کافی نداری!')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text("پرداخت و رفتن", style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -153,53 +237,54 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: _game),
 
-          if (!isInsideShop)
-            Positioned(
-              top: 20,
-              right: 40,
-              child: Row(
-                children: [
-                  Container(
+          // 🌟 آیکون‌های انرژی و سکه
+          Positioned(
+            top: 20,
+            right: 40,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.redAccent, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)),
+                      const SizedBox(width: 5),
+                      Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
+                  },
+                  child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.redAccent, width: 1),
+                      border: Border.all(color: Colors.amber, width: 1),
                     ),
                     child: Row(
                       children: [
-                        Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)),
+                        Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 18)),
                         const SizedBox(width: 5),
-                        Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14)),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ShopScreen()));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.amber, width: 1),
-                      ),
-                      child: Row(
-                        children: [
-                          Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c, e, s) => const Icon(Icons.star, color: Colors.amber, size: 18)),
-                          const SizedBox(width: 5),
-                          Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-          if (!showDialogue && currentPhase == 1 && !isInsideShop)
+          // 🌟 دکمه‌های حرکت
+          if (!showDialogue && currentPhase == 0)
             Positioned(
               bottom: 20,
               left: 30,
@@ -223,18 +308,25 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
 
-          if (!showDialogue && !isInsideShop)
-             Positioned(
-              bottom: 120,
-              left: 100,
+          // 🌟 دکمه خروج از مکان‌های داخلی
+          if (currentPhase != 0)
+            Positioned(
+              top: 20,
+              left: 20,
               child: ElevatedButton.icon(
-                onPressed: _startShopDialogue,
-                icon: const Icon(Icons.store, color: Colors.white),
-                label: const Text("ورود به مغازه"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+                onPressed: () {
+                  setState(() {
+                    currentPhase = 0;
+                    showDialogue = false;
+                  });
+                },
+                icon: const Icon(Icons.exit_to_app, color: Colors.white),
+                label: const Text("خروج"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
               ),
             ),
 
+          // 🌟 کادر دیالوگ
           if (showDialogue)
             Positioned(
               bottom: 0,
@@ -276,9 +368,7 @@ class _GameScreenState extends State<GameScreen> {
                               onPressed: _nextDialogue,
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                               child: Text(
-                                dialogueIndex == currentDialogues.length - 1 
-                                  ? (currentPhase == 0 ? "برو به خیابون" : (currentPhase == 2 ? "برو به خیابون" : "پایان"))
-                                  : "ادامه",
+                                dialogueIndex == currentDialogues.length - 1 ? "پایان" : "ادامه",
                                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                               ),
                             ),
