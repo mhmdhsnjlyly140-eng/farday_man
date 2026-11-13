@@ -1,64 +1,81 @@
+
+import 'dart:ui' as ui;
 import 'package:flame/components.dart';
-import 'package:flame/sprite.dart';
-import 'package:flame/game.dart'; // 👈 این خط رو اضافه کردیم
-import 'package:flutter/material.dart';
 
-class Player extends PositionComponent {
-  double speed = 250.0; 
-  bool moveLeft = false;
-  bool moveRight = false;
+class PlayerComponent extends SpriteAnimationComponent {
+  final Future<ui.Image> Function(String) loadImage;
 
-  late SpriteAnimationComponent animationComponent;
-  late SpriteAnimation walkAnimation;
+  late SpriteAnimation idleAnimation;
+  late SpriteAnimation rightAnimation;
+  late SpriteAnimation leftAnimation;
 
-  // عکس‌ها رو از بیرون (توی ShopGame) می‌گیریم
-  Player(List<Sprite> walkSprites) : super(size: Vector2(140, 230), anchor: Anchor.bottomCenter) {
-    walkAnimation = SpriteAnimation.spriteList(
-      walkSprites,
-      stepTime: 0.15,
-      loop: true,
-    );
-  }
+  double direction = 0;
+  double speed = 220;
+
+  PlayerComponent({
+    required this.loadImage,
+  }) : super(
+          size: Vector2(100, 160),
+          anchor: Anchor.bottomCenter,
+        );
 
   @override
   Future<void> onLoad() async {
-    animationComponent = SpriteAnimationComponent(
-      animation: walkAnimation,
-      size: Vector2(140, 230),
-      anchor: Anchor.bottomCenter,
-    );
-    
-    // در ابتدا انیمیشن متوقف باشه
-    animationComponent.animation!.stepTime = 0; 
-    
-    add(animationComponent);
+    await super.onLoad();
+
+    final idleImage = await loadImage('arian_idle.png');
+
+    idleAnimation = SpriteAnimation([
+      SpriteAnimationFrame(
+        Sprite(idleImage),
+        stepTime: 1,
+      ),
+    ]);
+
+    rightAnimation = await _loadAnimation('arian_right_');
+    leftAnimation = await _loadAnimation('arian_left_');
+
+    animation = idleAnimation;
+  }
+
+  Future<SpriteAnimation> _loadAnimation(String prefix) async {
+    final frames = <SpriteAnimationFrame>[];
+
+    for (int i = 1; i <= 4; i++) {
+      final image = await loadImage('${prefix}$i.png');
+
+      frames.add(
+        SpriteAnimationFrame(
+          Sprite(image),
+          stepTime: 0.12,
+        ),
+      );
+    }
+
+    return SpriteAnimation(frames);
+  }
+
+  void moveLeft() {
+    direction = -1;
+    animation = leftAnimation;
+  }
+
+  void moveRight() {
+    direction = 1;
+    animation = rightAnimation;
+  }
+
+  void stopMoving() {
+    direction = 0;
+    animation = idleAnimation;
   }
 
   @override
   void update(double dt) {
     super.update(dt);
 
-    double direction = 0;
-    if (moveLeft) direction -= 1;
-    if (moveRight) direction += 1;
+    position.x += direction * speed * dt;
 
-    if (direction != 0) {
-      position.x += direction * speed * dt;
-      
-      // محدودیت حرکت در صفحه
-      final screenWidth = (parent as FlameGame).size.x;
-      if (position.x < 70) position.x = 70;
-      if (position.x > screenWidth - 70) position.x = screenWidth - 70;
-
-      animationComponent.animation!.stepTime = 0.15; // راه رفتن
-      
-      if (direction < 0) {
-        animationComponent.scale.x = -1;
-      } else {
-        animationComponent.scale.x = 1;
-      }
-    } else {
-      animationComponent.animation!.stepTime = 0; // توقف
-    }
+    position.x = position.x.clamp(80, 2320).toDouble();
   }
 }
