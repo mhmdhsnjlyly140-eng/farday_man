@@ -133,7 +133,7 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 بیلبورد با کادر مشکی داخلی
+// 🌟 بیلبورد با کادر مشکی هم‌اندازه عکس
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -146,18 +146,21 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    // عکس بیلبورد
-    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
+    // 1. عکس بیلبورد
+    add(SpriteComponent(
+      sprite: Sprite(image), 
+      size: size, 
+      anchor: Anchor.topLeft,
+    ));
     
-    // 🌟 کادر مشکی داخلی (دقیقاً داخل قاب بیلبورد)
+    // 2. کادر مشکی دقیقاً هم‌اندازه عکس (روی عکس)
     add(RectangleComponent(
-      size: Vector2(size.x - 40, size.y - 50), // 👈 کمی کوچک‌تر از خود بیلبورد
-      position: Vector2(20, 25), // 👈 وسط قرار بگیره
-      paint: Paint()..color = Colors.black,
+      size: size, 
+      paint: Paint()..color = Colors.black.withOpacity(0.8), 
       priority: 1,
     ));
     
-    // متن چشمک‌زن (روی کادر مشکی)
+    // 3. متن چشمک‌زن (وسط کادر مشکی)
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
