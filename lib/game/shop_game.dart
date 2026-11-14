@@ -26,6 +26,7 @@ class ShopGame extends FlameGame {
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
 
+    // 1. لود کردن ۴ منطقه اصلی
     final List<String> areaImages = [
       'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
     ];
@@ -46,7 +47,7 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // بیلبورد
+    // 2. بیلبورد (فقط عکس + متن، بدون کادر مشکی اضافه)
     try {
       final billboardImage = await images.load('billboard_asset.png');
       world.add(BillboardComponent(
@@ -59,7 +60,7 @@ class ShopGame extends FlameGame {
       debugPrint("عکس بیلبورد پیدا نشد: $e");
     }
 
-    // ایستگاه تاکسی
+    // 3. ایستگاه تاکسی
     try {
       final taxiImage = await images.load('taxi_stand.png');
       world.add(SpriteComponent(
@@ -79,7 +80,7 @@ class ShopGame extends FlameGame {
       debugPrint("عکس ایستگاه پیدا نشد: $e");
     }
 
-    // آرین
+    // 4. آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -132,7 +133,7 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 بیلبورد (کادر مشکی دقیقاً هم‌اندازه عکس)
+// 🌟 بیلبورد (فقط عکس + متن)
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -145,21 +146,14 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    // 1. عکس بیلبورد
+    // 1. فقط عکس بیلبورد
     add(SpriteComponent(
       sprite: Sprite(image), 
       size: size, 
       anchor: Anchor.topLeft,
     ));
     
-    // 2. کادر مشکی دقیقاً هم‌اندازه عکس (بدون هیچ حاشیه‌ای)
-    add(RectangleComponent(
-      size: size, 
-      paint: Paint()..color = Colors.black, 
-      priority: 1,
-    ));
-    
-    // 3. متن چشمک‌زن (وسط کادر مشکی)
+    // 2. متن چشمک‌زن (وسط عکس)
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
