@@ -47,34 +47,38 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 2. بیلبورد (فقط لود میشه، فعلاً کلیک نداره)
+    // 🌟 2. بیلبورد (بزرگ‌تر، روی زمین، با متن و دکمه)
     try {
       final billboardImage = await images.load('billboard_asset.png');
-      world.add(SpriteComponent(
-        sprite: Sprite(billboardImage),
-        size: Vector2(250, 130),
-        position: Vector2(700, size.y - 150), // 👈 تنظیم ارتفاع
-        anchor: Anchor.bottomLeft,
-        priority: 5,
+      world.add(BillboardComponent(
+        position: Vector2(600, size.y - 20), // 👈 روی زمین (مثل ایستگاه)
+        size: Vector2(300, 180), // 👈 سایز بزرگ‌تر
+        image: billboardImage,
+        onTap: () => onBillboardTap?.call(),
       ));
-      debugPrint("بیلبورد با موفقیت لود شد!");
     } catch (e) {
-      debugPrint("خطا در لود بیلبورد: $e");
+      debugPrint("عکس بیلبورد پیدا نشد: $e");
     }
 
-    // 3. ایستگاه تاکسی (فقط لود میشه، فعلاً کلیک نداره)
+    // 🌟 3. ایستگاه تاکسی (دقیقاً مثل عکسی که فرستادی - دست نمی‌زنم)
     try {
       final taxiImage = await images.load('taxi_stand.png');
       world.add(SpriteComponent(
         sprite: Sprite(taxiImage),
         size: Vector2(200, 250),
-        position: Vector2(1400, size.y - 20), // 👈 تنظیم ارتفاع
+        position: Vector2(1400, size.y - 20),
         anchor: Anchor.bottomCenter,
         priority: 15,
       ));
-      debugPrint("ایستگاه تاکسی با موفقیت لود شد!");
+      
+      // 🌟 دکمه‌ی شفاف روی ایستگاه (برای کلیک)
+      world.add(TaxiButtonComponent(
+        position: Vector2(1400, size.y - 145), // وسط ایستگاه
+        size: Vector2(200, 250),
+        onTap: () => onTaxiStandTap?.call(),
+      ));
     } catch (e) {
-      debugPrint("خطا در لود ایستگاه: $e");
+      debugPrint("عکس ایستگاه پیدا نشد: $e");
     }
 
     // 4. آرین
@@ -93,7 +97,7 @@ class ShopGame extends FlameGame {
         anchor: Anchor.bottomCenter,
       );
       player.position = Vector2(playerX, size.y - 80); 
-      player.priority = 10;
+      player.priority = 10; // 👈 آرین از پشت ایستگاه (۱۵) و جلوی بیلبورد (۵)
       world.add(player);
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
@@ -128,4 +132,62 @@ class ShopGame extends FlameGame {
     if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
     camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
+}
+
+// 🌟 بیلبورد (بزرگ‌تر، روی زمین، با متن و دکمه)
+class BillboardComponent extends PositionComponent with TapCallbacks {
+  final VoidCallback onTap;
+  final ui.Image image;
+  double _timer = 0;
+  bool _isTextVisible = true;
+  late TextComponent _textComponent;
+
+  BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) 
+    : super(position: position, size: size, anchor: Anchor.bottomLeft, priority: 5);
+
+  @override
+  Future<void> onLoad() async {
+    // عکس بیلبورد
+    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.bottomLeft));
+    
+    // متن چشمک‌زن
+    _textComponent = TextComponent(
+      text: "این فضا برای\nتبلیغات شماست!",
+      anchor: Anchor.center,
+      position: Vector2(size.x / 2, size.y / 2),
+      textRenderer: TextPaint(style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold)),
+    );
+    add(_textComponent);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _timer += dt;
+    if (_timer > 0.5) {
+      _timer = 0;
+      _isTextVisible = !_isTextVisible;
+      _textComponent.textRenderer = TextPaint(
+        style: TextStyle(
+          color: _isTextVisible ? Colors.amber : Colors.amber.withOpacity(0.2),
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) => onTap();
+}
+
+// 🌟 دکمه‌ی شفاف روی ایستگاه تاکسی (برای کلیک)
+class TaxiButtonComponent extends PositionComponent with TapCallbacks {
+  final VoidCallback onTap;
+
+  TaxiButtonComponent({required Vector2 position, required Vector2 size, required this.onTap}) 
+    : super(position: position, size: size, anchor: Anchor.center, priority: 16);
+
+  @override
+  void onTapDown(TapDownEvent event) => onTap();
 }
