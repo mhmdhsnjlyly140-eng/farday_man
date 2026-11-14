@@ -47,7 +47,7 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 2. بیلبورد (فقط عکس + متن، بدون کادر مشکی اضافه)
+    // 2. بیلبورد (جلوی آرین + کادر مشکی داخل قاب)
     try {
       final billboardImage = await images.load('billboard_asset.png');
       world.add(BillboardComponent(
@@ -80,7 +80,7 @@ class ShopGame extends FlameGame {
       debugPrint("عکس ایستگاه پیدا نشد: $e");
     }
 
-    // 4. آرین
+    // 4. آرین (priority: 10 - کمتر از بیلبورد)
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -133,7 +133,7 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 بیلبورد (فقط عکس + متن)
+// 🌟 بیلبورد (جلوی آرین + کادر مشکی داخل قاب)
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -142,18 +142,26 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   late TextComponent _textComponent;
 
   BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) 
-    : super(position: position, size: size, anchor: Anchor.topLeft, priority: 5);
+    : super(position: position, size: size, anchor: Anchor.topLeft, priority: 20);
 
   @override
   Future<void> onLoad() async {
-    // 1. فقط عکس بیلبورد
+    // 1. عکس بیلبورد
     add(SpriteComponent(
       sprite: Sprite(image), 
       size: size, 
       anchor: Anchor.topLeft,
     ));
     
-    // 2. متن چشمک‌زن (وسط عکس)
+    // 2. کادر مشکی فقط داخل قاب (با حاشیه‌ی مشخص)
+    add(RectangleComponent(
+      size: Vector2(size.x - 60, size.y - 70),
+      position: Vector2(30, 35),
+      paint: Paint()..color = Colors.black, 
+      priority: 1,
+    ));
+    
+    // 3. متن چشمک‌زن (وسط کادر مشکی)
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
