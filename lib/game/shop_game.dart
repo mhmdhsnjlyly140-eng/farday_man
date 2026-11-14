@@ -13,74 +13,106 @@ class ShopGame extends FlameGame {
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
   late SpriteAnimation idleAnimation;
+  late SpriteComponent background; // 👈 برای تعویض پس‌زمینه
 
   double playerX = 400;
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
 
+  // 🌟 وضعیت فعلی: 0 = خیابون اصلی، 1 = بهار، 2 = پونه‌زار، 3 = شاهد
+  int currentRegion = 0;
+
   VoidCallback? onTaxiStandTap;
   VoidCallback? onBillboardTap;
+  VoidCallback? onReturnToMainStreet;
+
+  final List<String> mainStreets = [
+    'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
+  ];
 
   @override
   Future<void> onLoad() async {
     camera.viewfinder.anchor = Anchor.topLeft;
+    await _loadRegion(0);
+  }
 
-    // 1. لود کردن ۴ منطقه اصلی
-    final List<String> areaImages = [
-      'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
-    ];
+  Future<void> _loadRegion(int regionId) async {
+    world.removeAll(world.children);
+    currentRegion = regionId;
+    playerX = 400;
 
-    for (int i = 0; i < areaImages.length; i++) {
-      try {
-        final image = await images.load(areaImages[i]);
-        double aspectRatio = image.height / image.width;
-        double finalHeight = singleAreaWidth * aspectRatio;
-        world.add(SpriteComponent(
-          sprite: Sprite(image),
-          size: Vector2(singleAreaWidth, finalHeight), 
-          position: Vector2(i * singleAreaWidth, 0), 
-          priority: -10,
-        ));
-      } catch (e) {
-        world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(i * singleAreaWidth, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
+    if (regionId == 0) {
+      // 🌟 لود ۴ خیابون اصلی
+      for (int i = 0; i < mainStreets.length; i++) {
+        try {
+          final image = await images.load(mainStreets[i]);
+          double aspectRatio = image.height / image.width;
+          double finalHeight = singleAreaWidth * aspectRatio;
+          world.add(SpriteComponent(
+            sprite: Sprite(image),
+            size: Vector2(singleAreaWidth, finalHeight), 
+            position: Vector2(i * singleAreaWidth, 0), 
+            priority: -10,
+          ));
+        } catch (e) {
+          world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(i * singleAreaWidth, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
+        }
       }
+      // بیلبورد
+      try {
+        final billboardImage = await images.load('billboard_asset.png');
+        world.add(BillboardComponent(
+          position: Vector2(600, size.y - 250),
+          size: Vector2(350, 200),
+          image: billboardImage,
+          onTap: () => onBillboardTap?.call(),
+        ));
+      } catch (e) {}
+      // ایستگاه تاکسی
+      try {
+        final taxiImage = await images.load('taxi_stand.png');
+        world.add(SpriteComponent(
+          sprite: Sprite(taxiImage),
+          size: Vector2(200, 250),
+          position: Vector2(1400, size.y - 20),
+          anchor: Anchor.bottomCenter,
+          priority: 15,
+        ));
+        world.add(TaxiButtonComponent(
+          position: Vector2(1400, size.y - 145),
+          size: Vector2(200, 250),
+          onTap: () => onTaxiStandTap?.call(),
+        ));
+      } catch (e) {}
+    } 
+    else if (regionId == 1) {
+      // 🌟 خیابون بهار
+      final image = await images.load('street_area_5.jpg');
+      double aspectRatio = image.height / image.width;
+      double finalHeight = singleAreaWidth * aspectRatio;
+      world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+      // دکمه برگشت
+      world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
+    }
+    else if (regionId == 2) {
+      // 🌟 خیابون پونه‌زار
+      final image = await images.load('street_area_6.png');
+      double aspectRatio = image.height / image.width;
+      double finalHeight = singleAreaWidth * aspectRatio;
+      world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+      world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
+    }
+    else if (regionId == 3) {
+      // 🌟 خیابون شاهد
+      final image = await images.load('street_area_7.png');
+      double aspectRatio = image.height / image.width;
+      double finalHeight = singleAreaWidth * aspectRatio;
+      world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+      world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 2. بیلبورد (جلوی آرین + کادر مشکی داخل قاب)
-    try {
-      final billboardImage = await images.load('billboard_asset.png');
-      world.add(BillboardComponent(
-        position: Vector2(600, size.y - 250),
-        size: Vector2(350, 200),
-        image: billboardImage,
-        onTap: () => onBillboardTap?.call(),
-      ));
-    } catch (e) {
-      debugPrint("عکس بیلبورد پیدا نشد: $e");
-    }
-
-    // 3. ایستگاه تاکسی
-    try {
-      final taxiImage = await images.load('taxi_stand.png');
-      world.add(SpriteComponent(
-        sprite: Sprite(taxiImage),
-        size: Vector2(200, 250),
-        position: Vector2(1400, size.y - 20),
-        anchor: Anchor.bottomCenter,
-        priority: 15,
-      ));
-      
-      world.add(TaxiButtonComponent(
-        position: Vector2(1400, size.y - 145),
-        size: Vector2(200, 250),
-        onTap: () => onTaxiStandTap?.call(),
-      ));
-    } catch (e) {
-      debugPrint("عکس ایستگاه پیدا نشد: $e");
-    }
-
-    // 4. آرین (priority: 10 - کمتر از بیلبورد)
+    // 🌟 لود آرین (روی پیاده‌رو)
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -98,15 +130,19 @@ class ShopGame extends FlameGame {
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
-    } catch (e) {
-      debugPrint("عکس‌های آرین پیدا نشد: $e");
-    }
+    } catch (e) {}
+  }
+
+  void goToRegion(int regionId) {
+    _loadRegion(regionId);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
     if (player.animation == null) return;
+
+    double maxX = (currentRegion == 0) ? 4000 : 1000;
 
     if (moveLeft) {
       isMoving = true;
@@ -116,7 +152,7 @@ class ShopGame extends FlameGame {
     } else if (moveRight) {
       isMoving = true;
       playerX += 250 * dt;
-      if (playerX > worldWidth - 70) playerX = worldWidth - 70;
+      if (playerX > maxX - 70) playerX = maxX - 70;
       if (player.animation != walkRightAnimation) player.animation = walkRightAnimation;
     } else {
       if (isMoving) {
@@ -128,12 +164,12 @@ class ShopGame extends FlameGame {
 
     double targetCameraX = playerX - (size.x / 2);
     if (targetCameraX < 0) targetCameraX = 0;
-    if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
+    if (targetCameraX > maxX - size.x) targetCameraX = maxX - size.x;
     camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
 }
 
-// 🌟 بیلبورد (جلوی آرین + کادر مشکی داخل قاب)
+// 🌟 بیلبورد
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -146,22 +182,8 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    // 1. عکس بیلبورد
-    add(SpriteComponent(
-      sprite: Sprite(image), 
-      size: size, 
-      anchor: Anchor.topLeft,
-    ));
-    
-    // 2. کادر مشکی فقط داخل قاب (با حاشیه‌ی مشخص)
-    add(RectangleComponent(
-      size: Vector2(size.x - 60, size.y - 70),
-      position: Vector2(30, 35),
-      paint: Paint()..color = Colors.black, 
-      priority: 1,
-    ));
-    
-    // 3. متن چشمک‌زن (وسط کادر مشکی)
+    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
+    add(RectangleComponent(size: Vector2(size.x - 60, size.y - 70), position: Vector2(30, 35), paint: Paint()..color = Colors.black, priority: 1));
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
@@ -193,13 +215,25 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   void onTapDown(TapDownEvent event) => onTap();
 }
 
-// 🌟 دکمه‌ی شفاف روی ایستگاه تاکسی
+// 🌟 دکمه‌ی ایستگاه تاکسی
 class TaxiButtonComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
-
   TaxiButtonComponent({required Vector2 position, required Vector2 size, required this.onTap}) 
     : super(position: position, size: size, anchor: Anchor.center, priority: 16);
 
+  @override
+  void onTapDown(TapDownEvent event) => onTap();
+}
+
+// 🌟 دکمه‌ی ورود/بازگشت
+class EnterButtonComponent extends PositionComponent with TapCallbacks {
+  final VoidCallback onTap;
+  EnterButtonComponent({required Vector2 position, required this.onTap}) : super(position: position, size: Vector2(40, 40), anchor: Anchor.center);
+  @override
+  Future<void> onLoad() async {
+    add(CircleComponent(radius: 20, paint: Paint()..color = Colors.white.withOpacity(0.8)));
+    add(RectangleComponent(size: Vector2(10, 10), position: Vector2(15, 15), paint: Paint()..color = Colors.blueAccent));
+  }
   @override
   void onTapDown(TapDownEvent event) => onTap();
 }
