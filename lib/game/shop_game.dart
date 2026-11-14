@@ -47,12 +47,12 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 🌟 2. بیلبورد (بزرگ‌تر، روی زمین، با متن و دکمه)
+    // 2. بیلبورد (بزرگ‌تر، روی زمین، با کادر مشکی داخلی)
     try {
       final billboardImage = await images.load('billboard_asset.png');
       world.add(BillboardComponent(
-        position: Vector2(600, size.y - 20), // 👈 روی زمین (مثل ایستگاه)
-        size: Vector2(300, 180), // 👈 سایز بزرگ‌تر
+        position: Vector2(600, size.y - 250),
+        size: Vector2(350, 200),
         image: billboardImage,
         onTap: () => onBillboardTap?.call(),
       ));
@@ -60,7 +60,7 @@ class ShopGame extends FlameGame {
       debugPrint("عکس بیلبورد پیدا نشد: $e");
     }
 
-    // 🌟 3. ایستگاه تاکسی (دقیقاً مثل عکسی که فرستادی - دست نمی‌زنم)
+    // 3. ایستگاه تاکسی
     try {
       final taxiImage = await images.load('taxi_stand.png');
       world.add(SpriteComponent(
@@ -71,9 +71,8 @@ class ShopGame extends FlameGame {
         priority: 15,
       ));
       
-      // 🌟 دکمه‌ی شفاف روی ایستگاه (برای کلیک)
       world.add(TaxiButtonComponent(
-        position: Vector2(1400, size.y - 145), // وسط ایستگاه
+        position: Vector2(1400, size.y - 145),
         size: Vector2(200, 250),
         onTap: () => onTaxiStandTap?.call(),
       ));
@@ -97,7 +96,7 @@ class ShopGame extends FlameGame {
         anchor: Anchor.bottomCenter,
       );
       player.position = Vector2(playerX, size.y - 80); 
-      player.priority = 10; // 👈 آرین از پشت ایستگاه (۱۵) و جلوی بیلبورد (۵)
+      player.priority = 10;
       world.add(player);
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
@@ -134,7 +133,7 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 بیلبورد (بزرگ‌تر، روی زمین، با متن و دکمه)
+// 🌟 بیلبورد با کادر مشکی داخلی
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -143,19 +142,28 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   late TextComponent _textComponent;
 
   BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) 
-    : super(position: position, size: size, anchor: Anchor.bottomLeft, priority: 5);
+    : super(position: position, size: size, anchor: Anchor.topLeft, priority: 5);
 
   @override
   Future<void> onLoad() async {
     // عکس بیلبورد
-    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.bottomLeft));
+    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
     
-    // متن چشمک‌زن
+    // 🌟 کادر مشکی داخلی (دقیقاً داخل قاب بیلبورد)
+    add(RectangleComponent(
+      size: Vector2(size.x - 40, size.y - 50), // 👈 کمی کوچک‌تر از خود بیلبورد
+      position: Vector2(20, 25), // 👈 وسط قرار بگیره
+      paint: Paint()..color = Colors.black,
+      priority: 1,
+    ));
+    
+    // متن چشمک‌زن (روی کادر مشکی)
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
       position: Vector2(size.x / 2, size.y / 2),
       textRenderer: TextPaint(style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold)),
+      priority: 2,
     );
     add(_textComponent);
   }
@@ -181,7 +189,7 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   void onTapDown(TapDownEvent event) => onTap();
 }
 
-// 🌟 دکمه‌ی شفاف روی ایستگاه تاکسی (برای کلیک)
+// 🌟 دکمه‌ی شفاف روی ایستگاه تاکسی
 class TaxiButtonComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
 
