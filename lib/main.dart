@@ -21,7 +21,6 @@ class FardayeManApp extends StatelessWidget {
   }
 }
 
-// 🌟 منوی اصلی
 class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({super.key});
   @override
@@ -84,7 +83,6 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late ShopGame _game;
   final gameState = GameState();
-  Timer? _energyTimer;
 
   bool showDialogue = true;
   int dialogueIndex = 0;
@@ -97,11 +95,9 @@ class _GameScreenState extends State<GameScreen> {
     _game = ShopGame();
     _game.onTaxiStandTap = _openTaxiMenu;
     _game.onBillboardTap = _showBillboardInfo;
+    _game.onReturnToMainStreet = _returnToMainStreet;
     _loadGameData();
   }
-
-  @override
-  void dispose() { _energyTimer?.cancel(); super.dispose(); }
 
   Future<void> _loadGameData() async { await gameState.loadGame(); setState(() {}); }
 
@@ -111,6 +107,7 @@ class _GameScreenState extends State<GameScreen> {
     } else { setState(() { showDialogue = false; }); }
   }
 
+  // 🌟 منوی تاکسی
   void _openTaxiMenu() {
     showDialog(
       context: context,
@@ -118,13 +115,36 @@ class _GameScreenState extends State<GameScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E2C),
           title: const Text("تاکسی", style: TextStyle(color: Colors.amber)),
-          content: const Text("این بخش به زودی فعال می‌شود!", style: TextStyle(color: Colors.white)),
-          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("بستن", style: TextStyle(color: Colors.redAccent)))],
+          content: const Text("به کجا می‌خوای بری؟ (هزینه: ۴۰,۰۰۰ تومان)", style: TextStyle(color: Colors.white)),
+          actions: [
+            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(1); }, child: const Text("خیابان بهار (نانوایی و ساعت‌سازی)", style: TextStyle(color: Colors.white))),
+            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(2); }, child: const Text("خیابان پونه‌زار (مدرسه و کتابخانه)", style: TextStyle(color: Colors.white))),
+            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(3); }, child: const Text("خیابان شاهد (طلا فروشی، کافه، لباس)", style: TextStyle(color: Colors.white))),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("لغو", style: TextStyle(color: Colors.redAccent))),
+          ],
         );
       },
     );
   }
 
+  // 🌟 درخواست تاکسی
+  void _requestTaxi(int regionId) async {
+    if (gameState.buyPersonal(40000)) {
+      // افکت محو شدن
+      setState(() => showDialogue = false);
+      await Future.delayed(const Duration(milliseconds: 500));
+      _game.goToRegion(regionId);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('پول کافی نداری!')));
+    }
+  }
+
+  // 🌟 بازگشت به خیابون اصلی
+  void _returnToMainStreet() {
+    _game.goToRegion(0);
+  }
+
+  // 🌟 پنجره بیلبورد
   void _showBillboardInfo() {
     showDialog(
       context: context,
@@ -136,8 +156,6 @@ class _GameScreenState extends State<GameScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("صاحب کسب‌وکار هستید؟", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
               Text("📞 09052380706", style: TextStyle(color: Colors.white, fontSize: 16)),
               Text("⏰ ۷ تا ۹ شب", style: TextStyle(color: Colors.white70, fontSize: 14)),
             ],
@@ -159,17 +177,9 @@ class _GameScreenState extends State<GameScreen> {
             top: 20, right: 40,
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.redAccent, width: 1)),
-                  child: Row(children: [Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)), const SizedBox(width: 5), Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14))]),
-                ),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.redAccent, width: 1)), child: Row(children: [Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)), const SizedBox(width: 5), Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14))])),
                 const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.amber, width: 1)),
-                  child: Row(children: [Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.star, color: Colors.amber, size: 18)), const SizedBox(width: 5), Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14))]),
-                ),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.amber, width: 1)), child: Row(children: [Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.star, color: Colors.amber, size: 18)), const SizedBox(width: 5), Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14))])),
               ],
             ),
           ),
