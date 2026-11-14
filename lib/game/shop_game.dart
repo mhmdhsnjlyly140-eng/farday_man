@@ -47,33 +47,37 @@ class ShopGame extends FlameGame {
       }
     }
 
-    // 2. بیلبورد (روی زمین، بزرگ‌تر)
+    // 2. بیلبورد (فقط لود میشه، فعلاً کلیک نداره)
     try {
       final billboardImage = await images.load('billboard_asset.png');
-      world.add(BillboardComponent(
-        position: Vector2(700, size.y - 280), // 👈 ارتفاع روی زمین
-        size: Vector2(250, 130), // 👈 سایز بزرگ‌تر
-        image: billboardImage,
-        onTap: () => onBillboardTap?.call(),
+      world.add(SpriteComponent(
+        sprite: Sprite(billboardImage),
+        size: Vector2(250, 130),
+        position: Vector2(700, size.y - 150), // 👈 تنظیم ارتفاع
+        anchor: Anchor.bottomLeft,
+        priority: 5,
       ));
+      debugPrint("بیلبورد با موفقیت لود شد!");
     } catch (e) {
-      debugPrint("عکس بیلبورد پیدا نشد");
+      debugPrint("خطا در لود بیلبورد: $e");
     }
 
-    // 3. ایستگاه تاکسی (بزرگ‌تر، با priority پایین‌تر از آرین)
+    // 3. ایستگاه تاکسی (فقط لود میشه، فعلاً کلیک نداره)
     try {
       final taxiImage = await images.load('taxi_stand.png');
-      world.add(TaxiStandComponent(
-        position: Vector2(1400, size.y - 300), // 👈 ارتفاع مناسب
-        size: Vector2(200, 250), // 👈 سایز بزرگ‌تر
-        image: taxiImage,
-        onTap: () => onTaxiStandTap?.call(),
+      world.add(SpriteComponent(
+        sprite: Sprite(taxiImage),
+        size: Vector2(200, 250),
+        position: Vector2(1400, size.y - 20), // 👈 تنظیم ارتفاع
+        anchor: Anchor.bottomCenter,
+        priority: 15,
       ));
+      debugPrint("ایستگاه تاکسی با موفقیت لود شد!");
     } catch (e) {
-      debugPrint("عکس ایستگاه تاکسی پیدا نشد");
+      debugPrint("خطا در لود ایستگاه: $e");
     }
 
-    // 4. لود کردن آرین (priority بالاتر از ایستگاه تا از پشتش رد بشه)
+    // 4. آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -89,7 +93,7 @@ class ShopGame extends FlameGame {
         anchor: Anchor.bottomCenter,
       );
       player.position = Vector2(playerX, size.y - 80); 
-      player.priority = 20; // 👈 بالاتر از ایستگاه (۱۵)، تا از پشتش رد بشه
+      player.priority = 10;
       world.add(player);
     } catch (e) {
       debugPrint("عکس‌های آرین پیدا نشد: $e");
@@ -124,38 +128,4 @@ class ShopGame extends FlameGame {
     if (targetCameraX > worldWidth - size.x) targetCameraX = worldWidth - size.x;
     camera.viewfinder.position = Vector2(targetCameraX, 0);
   }
-}
-
-// 🌟 بیلبورد (روی زمین)
-class BillboardComponent extends PositionComponent with TapCallbacks {
-  final VoidCallback onTap;
-  final ui.Image image;
-
-  BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) 
-    : super(position: position, size: size, anchor: Anchor.bottomLeft);
-
-  @override
-  Future<void> onLoad() async {
-    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.bottomLeft));
-  }
-
-  @override
-  void onTapDown(TapDownEvent event) => onTap();
-}
-
-// 🌟 ایستگاه تاکسی (بزرگ‌تر و پشت آرین)
-class TaxiStandComponent extends PositionComponent with TapCallbacks {
-  final VoidCallback onTap;
-  final ui.Image image;
-
-  TaxiStandComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) 
-    : super(position: position, size: size, anchor: Anchor.bottomCenter, priority: 15); // 👈 priority 15 (کمتر از آرین)
-
-  @override
-  Future<void> onLoad() async {
-    add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.bottomCenter));
-  }
-
-  @override
-  void onTapDown(TapDownEvent event) => onTap();
 }
