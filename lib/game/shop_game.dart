@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 class ShopGame extends FlameGame {
   final double worldWidth = 4000; 
   final double singleAreaWidth = 1000;
-  
+
   late SpriteAnimationComponent player;
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
@@ -42,7 +42,7 @@ class ShopGame extends FlameGame {
 
     double playerSize = 100;
     double playerYOffset = 75;
-    
+
     if (regionId == 1 || regionId == 3) {
       playerSize = 130;
       playerYOffset = 50;
@@ -74,7 +74,7 @@ class ShopGame extends FlameGame {
           onTap: () => onBillboardTap?.call(),
         ));
       } catch (e) {}
-      // ایستگاه تاکسی (اسم درست: taxi_stand.png)
+      // ایستگاه تاکسی
       try {
         final taxiImage = await images.load('taxi_stand.png');
         world.add(SpriteComponent(
@@ -114,8 +114,9 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 2) {
+      // ⚠️ تغییر تستی موقت: به جای street_area_6.png از street_area_1.png استفاده می‌کنیم
       try {
-        final image = await images.load('street_area_6.png');
+        final image = await images.load('street_area_1.png');
         double finalHeight = size.y * 1.1; 
         world.add(SpriteComponent(
           sprite: Sprite(image), 
@@ -123,6 +124,7 @@ class ShopGame extends FlameGame {
           position: Vector2(0, 0), 
           priority: -10
         ));
+        debugPrint("✅ تست: پونه‌زار با street_area_1.png لود شد");
       } catch (e) {
         world.add(RectangleComponent(
           size: Vector2(singleAreaWidth, size.y), 
@@ -130,7 +132,7 @@ class ShopGame extends FlameGame {
           paint: Paint()..color = Colors.brown.shade800, 
           priority: -10
         ));
-        debugPrint("عکس پونه‌زار پیدا نشد!");
+        debugPrint("❌ تست: حتی street_area_1.png هم لود نشد: $e");
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
@@ -203,7 +205,7 @@ class ShopGame extends FlameGame {
         player.animation = idleAnimation;
       }
     }
-    
+
     double yOffset = (currentRegion == 1 || currentRegion == 3) ? 50 : 75;
     player.position = Vector2(playerX, size.y - yOffset);
 
