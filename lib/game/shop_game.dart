@@ -40,6 +40,16 @@ class ShopGame extends FlameGame {
     currentRegion = regionId;
     playerX = 400;
 
+    // 🌟 تنظیمات آرین بر اساس منطقه
+    double playerSize = 100;
+    double playerYOffset = 75;
+    
+    // توی مناطق بهار و شاهد، آرین بزرگ‌تر و پایین‌تر میشه
+    if (regionId == 1 || regionId == 3) {
+      playerSize = 130;
+      playerYOffset = 50;
+    }
+
     if (regionId == 0) {
       for (int i = 0; i < mainStreets.length; i++) {
         try {
@@ -68,7 +78,7 @@ class ShopGame extends FlameGame {
       } catch (e) {}
       // ایستگاه تاکسی
       try {
-        final taxiImage = await images.load('taxi_stand.png');
+        final taxiImage = await images.load('taxi_station.png');
         world.add(SpriteComponent(
           sprite: Sprite(taxiImage),
           size: Vector2(200, 250),
@@ -84,39 +94,71 @@ class ShopGame extends FlameGame {
       } catch (e) {}
     } 
     else if (regionId == 1) {
+      // 🌟 خیابون بهار (دقیقاً مثل پونه‌زار)
       try {
         final image = await images.load('street_area_5.jpg');
         double finalHeight = size.y * 1.1; 
-        world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+        world.add(SpriteComponent(
+          sprite: Sprite(image), 
+          size: Vector2(singleAreaWidth, finalHeight), 
+          position: Vector2(0, 0), 
+          priority: -10
+        ));
       } catch (e) {
-        world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(0, 0), paint: Paint()..color = Colors.brown.shade800, priority: -10));
+        world.add(RectangleComponent(
+          size: Vector2(singleAreaWidth, size.y), 
+          position: Vector2(0, 0), 
+          paint: Paint()..color = Colors.brown.shade800, 
+          priority: -10
+        ));
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 2) {
-      // 🌟 خیابون پونه‌زار (عکس جدید)
+      // 🌟 خیابون پونه‌زار (دقیقاً مثل بهار)
       try {
         final image = await images.load('street_area_6.png');
         double finalHeight = size.y * 1.1; 
-        world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+        world.add(SpriteComponent(
+          sprite: Sprite(image), 
+          size: Vector2(singleAreaWidth, finalHeight), 
+          position: Vector2(0, 0), 
+          priority: -10
+        ));
       } catch (e) {
-        world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(0, 0), paint: Paint()..color = Colors.brown.shade800, priority: -10));
+        world.add(RectangleComponent(
+          size: Vector2(singleAreaWidth, size.y), 
+          position: Vector2(0, 0), 
+          paint: Paint()..color = Colors.brown.shade800, 
+          priority: -10
+        ));
         debugPrint("عکس پونه‌زار پیدا نشد!");
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 3) {
+      // 🌟 خیابون شاهد
       try {
         final image = await images.load('street_area_7.png');
         double finalHeight = size.y * 1.1; 
-        world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+        world.add(SpriteComponent(
+          sprite: Sprite(image), 
+          size: Vector2(singleAreaWidth, finalHeight), 
+          position: Vector2(0, 0), 
+          priority: -10
+        ));
       } catch (e) {
-        world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(0, 0), paint: Paint()..color = Colors.brown.shade800, priority: -10));
+        world.add(RectangleComponent(
+          size: Vector2(singleAreaWidth, size.y), 
+          position: Vector2(0, 0), 
+          paint: Paint()..color = Colors.brown.shade800, 
+          priority: -10
+        ));
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 🌟 لود آرین (عدد ۷۵)
+    // 🌟 لود آرین با سایز و ارتفاع متغیر
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -128,10 +170,10 @@ class ShopGame extends FlameGame {
 
       player = SpriteAnimationComponent(
         animation: idleAnimation, 
-        size: Vector2(140, 210), 
+        size: Vector2(playerSize, playerSize * 1.5), 
         anchor: Anchor.bottomCenter,
       );
-      player.position = Vector2(playerX, size.y - 75); // 👈 عدد 75
+      player.position = Vector2(playerX, size.y - playerYOffset); 
       player.priority = 10;
       world.add(player);
     } catch (e) {}
@@ -164,7 +206,10 @@ class ShopGame extends FlameGame {
         player.animation = idleAnimation;
       }
     }
-    player.position = Vector2(playerX, size.y - 75);
+    
+    // 🌟 به‌روزرسانی موقعیت بر اساس منطقه
+    double yOffset = (currentRegion == 1 || currentRegion == 3) ? 50 : 75;
+    player.position = Vector2(playerX, size.y - yOffset);
 
     double targetCameraX = playerX - (size.x / 2);
     if (targetCameraX < 0) targetCameraX = 0;
