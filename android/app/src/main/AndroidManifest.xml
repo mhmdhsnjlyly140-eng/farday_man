@@ -1,0 +1,4 @@
+<application
+    android:label="فردای من"
+    android:name="${applicationName}"
+    android:icon="@mipmap/ic_launcher">
