@@ -19,18 +19,17 @@ class ShopGame extends FlameGame {
   bool moveRight = false;
   bool isMoving = false;
 
-  int currentRegion = 0; // 0 = خیابون اصلی، 1 = بهار، 2 = پونه‌زار، 3 = شاهد
+  int currentRegion = 0;
 
   VoidCallback? onTaxiStandTap;
   VoidCallback? onBillboardTap;
   VoidCallback? onReturnToMainStreet;
 
-  // 🌟 ترتیب عکس‌ها (برای جلوگیری از آینه شدن)
   final List<String> mainStreets = [
-    'street_area_4.png', // سمت راست
-    'street_area_3.png',
+    'street_area_1.png',
     'street_area_2.png',
-    'street_area_1.png', // سمت چپ
+    'street_area_3.png',
+    'street_area_4.png',
   ];
 
   @override
@@ -44,13 +43,11 @@ class ShopGame extends FlameGame {
     currentRegion = regionId;
     playerX = 400;
 
-    // 🌟 تابع لود پس‌زمینه با حفظ نسبت ابعاد
     Future<void> addBackgroundImage(String imagePath, double xOffset) async {
       try {
         final image = await images.load(imagePath);
         double aspectRatio = image.height / image.width;
         double finalHeight = singleAreaWidth * aspectRatio;
-
         world.add(SpriteComponent(
           sprite: Sprite(image),
           size: Vector2(singleAreaWidth, finalHeight), 
@@ -59,25 +56,22 @@ class ShopGame extends FlameGame {
         ));
       } catch (e) {
         debugPrint("عکس $imagePath پیدا نشد");
-        world.add(RectangleComponent(
-          size: Vector2(singleAreaWidth, size.y), 
-          position: Vector2(xOffset, 0), 
-          paint: Paint()..color = Colors.grey.shade800, 
-          priority: -10
-        ));
+        world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(xOffset, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
       }
     }
 
     if (regionId == 0) {
+      // 🌟 چیدن از راست به چپ (برای جلوگیری از آینه شدن)
       for (int i = 0; i < mainStreets.length; i++) {
-        await addBackgroundImage(mainStreets[i], i * singleAreaWidth);
+        int reverseIndex = (mainStreets.length - 1) - i;
+        await addBackgroundImage(mainStreets[reverseIndex], i * singleAreaWidth);
       }
       
       // بیلبورد
       try {
         final billboardImage = await images.load('billboard_asset.png');
         world.add(BillboardComponent(
-          position: Vector2(1200, size.y - 250), // 👈 جابه‌جا کردم که روی منطقه ۱ بیفته
+          position: Vector2(600, size.y - 250),
           size: Vector2(350, 200),
           image: billboardImage,
           onTap: () => onBillboardTap?.call(),
@@ -90,12 +84,12 @@ class ShopGame extends FlameGame {
         world.add(SpriteComponent(
           sprite: Sprite(taxiImage),
           size: Vector2(200, 250),
-          position: Vector2(1800, size.y - 20),
+          position: Vector2(1400, size.y - 20),
           anchor: Anchor.bottomCenter,
           priority: 15,
         ));
         world.add(TaxiButtonComponent(
-          position: Vector2(1800, size.y - 145),
+          position: Vector2(1400, size.y - 145),
           size: Vector2(200, 250),
           onTap: () => onTaxiStandTap?.call(),
         ));
@@ -115,7 +109,6 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 🌟 لود آرین (روی پیاده‌رو)
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -133,7 +126,9 @@ class ShopGame extends FlameGame {
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("عکس‌های آرین پیدا نشد: $e");
+    }
   }
 
   void goToRegion(int regionId) {
@@ -186,7 +181,6 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
-    // 🌟 کادر مشکی (تنظیم دقیق برای قاب داخلی)
     add(RectangleComponent(
       size: Vector2(size.x - 70, size.y - 80), 
       position: Vector2(35, 40), 
