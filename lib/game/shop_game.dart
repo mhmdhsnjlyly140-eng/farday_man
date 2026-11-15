@@ -25,8 +25,12 @@ class ShopGame extends FlameGame {
   VoidCallback? onBillboardTap;
   VoidCallback? onReturnToMainStreet;
 
+  // 🌟 ترتیب عکس‌ها (برای جلوگیری از آینه شدن)
   final List<String> mainStreets = [
-    'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
+    'street_area_4.png', // سمت راست
+    'street_area_3.png',
+    'street_area_2.png',
+    'street_area_1.png', // سمت چپ
   ];
 
   @override
@@ -40,19 +44,16 @@ class ShopGame extends FlameGame {
     currentRegion = regionId;
     playerX = 400;
 
-    // 🌟 تابع کمکی برای لود عکس با حفظ نسبت ابعاد و چسبیدن به پایین صفحه
+    // 🌟 تابع لود پس‌زمینه با حفظ نسبت ابعاد
     Future<void> addBackgroundImage(String imagePath, double xOffset) async {
       try {
         final image = await images.load(imagePath);
-        
-        // محاسبه ارتفاع بر اساس نسبت ابعاد اصلی عکس (بدون کشیدگی)
         double aspectRatio = image.height / image.width;
         double finalHeight = singleAreaWidth * aspectRatio;
 
         world.add(SpriteComponent(
           sprite: Sprite(image),
           size: Vector2(singleAreaWidth, finalHeight), 
-          // 🌟 چسبیدن به پایین صفحه: ارتفاع عکس رو از پایین صفحه (size.y) کم می‌کنیم
           position: Vector2(xOffset, size.y - finalHeight), 
           priority: -10,
         ));
@@ -76,7 +77,7 @@ class ShopGame extends FlameGame {
       try {
         final billboardImage = await images.load('billboard_asset.png');
         world.add(BillboardComponent(
-          position: Vector2(600, size.y - 250),
+          position: Vector2(1200, size.y - 250), // 👈 جابه‌جا کردم که روی منطقه ۱ بیفته
           size: Vector2(350, 200),
           image: billboardImage,
           onTap: () => onBillboardTap?.call(),
@@ -89,12 +90,12 @@ class ShopGame extends FlameGame {
         world.add(SpriteComponent(
           sprite: Sprite(taxiImage),
           size: Vector2(200, 250),
-          position: Vector2(1400, size.y - 20),
+          position: Vector2(1800, size.y - 20),
           anchor: Anchor.bottomCenter,
           priority: 15,
         ));
         world.add(TaxiButtonComponent(
-          position: Vector2(1400, size.y - 145),
+          position: Vector2(1800, size.y - 145),
           size: Vector2(200, 250),
           onTap: () => onTaxiStandTap?.call(),
         ));
@@ -114,7 +115,7 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 🌟 لود آرین (همیشه روی پیاده‌رو)
+    // 🌟 لود آرین (روی پیاده‌رو)
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -129,13 +130,10 @@ class ShopGame extends FlameGame {
         size: Vector2(110, 170), 
         anchor: Anchor.bottomCenter,
       );
-      // 🌟 آرین ۸۰ پیکسل از پایین صفحه فاصله داره (که معمولاً روی پیاده‌رو هست)
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
-    } catch (e) {
-      debugPrint("عکس‌های آرین پیدا نشد: $e");
-    }
+    } catch (e) {}
   }
 
   void goToRegion(int regionId) {
@@ -188,7 +186,13 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
-    add(RectangleComponent(size: Vector2(size.x - 60, size.y - 70), position: Vector2(30, 35), paint: Paint()..color = Colors.black, priority: 1));
+    // 🌟 کادر مشکی (تنظیم دقیق برای قاب داخلی)
+    add(RectangleComponent(
+      size: Vector2(size.x - 70, size.y - 80), 
+      position: Vector2(35, 40), 
+      paint: Paint()..color = Colors.black, 
+      priority: 1
+    ));
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
