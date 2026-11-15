@@ -41,7 +41,6 @@ class ShopGame extends FlameGame {
     playerX = 400;
 
     if (regionId == 0) {
-      // 🌟 مناطق ۱ تا ۴
       for (int i = 0; i < mainStreets.length; i++) {
         try {
           final image = await images.load(mainStreets[i]);
@@ -85,59 +84,39 @@ class ShopGame extends FlameGame {
       } catch (e) {}
     } 
     else if (regionId == 1) {
-      // 🌟 خیابون بهار (دوربین بالاتر، سردر دیده بشه)
       try {
         final image = await images.load('street_area_5.jpg');
-        double aspectRatio = image.height / image.width;
         double finalHeight = size.y * 1.1; 
-        world.add(SpriteComponent(
-          sprite: Sprite(image), 
-          size: Vector2(singleAreaWidth, finalHeight), 
-          position: Vector2(0, 0), 
-          priority: -10
-        ));
+        world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
       } catch (e) {
         world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(0, 0), paint: Paint()..color = Colors.brown.shade800, priority: -10));
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 2) {
-      // 🌟 خیابون پونه‌زار (اگه عکس نبود، صفحه سیاه نشه)
+      // 🌟 خیابون پونه‌زار (عکس جدید)
       try {
         final image = await images.load('street_area_6.png');
-        double aspectRatio = image.height / image.width;
         double finalHeight = size.y * 1.1; 
-        world.add(SpriteComponent(
-          sprite: Sprite(image), 
-          size: Vector2(singleAreaWidth, finalHeight), 
-          position: Vector2(0, 0), 
-          priority: -10
-        ));
+        world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
       } catch (e) {
         world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(0, 0), paint: Paint()..color = Colors.brown.shade800, priority: -10));
-        debugPrint("عکس پونه‌زار (street_area_6.png) پیدا نشد!");
+        debugPrint("عکس پونه‌زار پیدا نشد!");
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 3) {
-      // 🌟 خیابون شاهد (دوربین بالاتر، سردر دیده بشه)
       try {
         final image = await images.load('street_area_7.png');
-        double aspectRatio = image.height / image.width;
         double finalHeight = size.y * 1.1; 
-        world.add(SpriteComponent(
-          sprite: Sprite(image), 
-          size: Vector2(singleAreaWidth, finalHeight), 
-          position: Vector2(0, 0), 
-          priority: -10
-        ));
+        world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
       } catch (e) {
         world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(0, 0), paint: Paint()..color = Colors.brown.shade800, priority: -10));
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 🌟 لود آرین (بزرگ‌تر)
+    // 🌟 لود آرین (عدد ۷۵)
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -149,11 +128,10 @@ class ShopGame extends FlameGame {
 
       player = SpriteAnimationComponent(
         animation: idleAnimation, 
-        // 👈 سایز آرین رو بزرگ‌تر کردیم (140x210)
         size: Vector2(140, 210), 
         anchor: Anchor.bottomCenter,
       );
-      player.position = Vector2(playerX, size.y - 80); 
+      player.position = Vector2(playerX, size.y - 75); // 👈 عدد 75
       player.priority = 10;
       world.add(player);
     } catch (e) {}
@@ -186,7 +164,7 @@ class ShopGame extends FlameGame {
         player.animation = idleAnimation;
       }
     }
-    player.position = Vector2(playerX, size.y - 80);
+    player.position = Vector2(playerX, size.y - 75);
 
     double targetCameraX = playerX - (size.x / 2);
     if (targetCameraX < 0) targetCameraX = 0;
@@ -209,12 +187,7 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
-    add(RectangleComponent(
-      size: Vector2(size.x - 60, size.y - 70), 
-      position: Vector2(30, 35), 
-      paint: Paint()..color = Colors.black, 
-      priority: 1
-    ));
+    add(RectangleComponent(size: Vector2(size.x - 60, size.y - 70), position: Vector2(30, 35), paint: Paint()..color = Colors.black, priority: 1));
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
