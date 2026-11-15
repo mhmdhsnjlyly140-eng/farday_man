@@ -40,11 +40,9 @@ class ShopGame extends FlameGame {
     currentRegion = regionId;
     playerX = 400;
 
-    // 🌟 تنظیمات آرین بر اساس منطقه
     double playerSize = 100;
     double playerYOffset = 75;
     
-    // توی مناطق بهار و شاهد، آرین بزرگ‌تر و پایین‌تر میشه
     if (regionId == 1 || regionId == 3) {
       playerSize = 130;
       playerYOffset = 50;
@@ -76,9 +74,9 @@ class ShopGame extends FlameGame {
           onTap: () => onBillboardTap?.call(),
         ));
       } catch (e) {}
-      // ایستگاه تاکسی
+      // ایستگاه تاکسی (اسم درست: taxi_stand.png)
       try {
-        final taxiImage = await images.load('taxi_station.png');
+        final taxiImage = await images.load('taxi_stand.png');
         world.add(SpriteComponent(
           sprite: Sprite(taxiImage),
           size: Vector2(200, 250),
@@ -91,10 +89,11 @@ class ShopGame extends FlameGame {
           size: Vector2(200, 250),
           onTap: () => onTaxiStandTap?.call(),
         ));
-      } catch (e) {}
+      } catch (e) {
+        debugPrint("عکس ایستگاه تاکسی پیدا نشد: $e");
+      }
     } 
     else if (regionId == 1) {
-      // 🌟 خیابون بهار (دقیقاً مثل پونه‌زار)
       try {
         final image = await images.load('street_area_5.jpg');
         double finalHeight = size.y * 1.1; 
@@ -115,7 +114,6 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 2) {
-      // 🌟 خیابون پونه‌زار (دقیقاً مثل بهار)
       try {
         final image = await images.load('street_area_6.png');
         double finalHeight = size.y * 1.1; 
@@ -137,7 +135,6 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 3) {
-      // 🌟 خیابون شاهد
       try {
         final image = await images.load('street_area_7.png');
         double finalHeight = size.y * 1.1; 
@@ -158,7 +155,7 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 🌟 لود آرین با سایز و ارتفاع متغیر
+    // لود آرین
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -207,7 +204,6 @@ class ShopGame extends FlameGame {
       }
     }
     
-    // 🌟 به‌روزرسانی موقعیت بر اساس منطقه
     double yOffset = (currentRegion == 1 || currentRegion == 3) ? 50 : 75;
     player.position = Vector2(playerX, size.y - yOffset);
 
@@ -218,7 +214,7 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 🌟 بیلبورد
+// بیلبورد
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -264,7 +260,7 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   void onTapDown(TapDownEvent event) => onTap();
 }
 
-// 🌟 دکمه‌ی ایستگاه تاکسی
+// دکمه‌ی ایستگاه تاکسی
 class TaxiButtonComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   TaxiButtonComponent({required Vector2 position, required Vector2 size, required this.onTap}) 
@@ -274,7 +270,7 @@ class TaxiButtonComponent extends PositionComponent with TapCallbacks {
   void onTapDown(TapDownEvent event) => onTap();
 }
 
-// 🌟 دکمه‌ی ورود/بازگشت
+// دکمه‌ی ورود/بازگشت
 class EnterButtonComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   EnterButtonComponent({required Vector2 position, required this.onTap}) : super(position: position, size: Vector2(40, 40), anchor: Anchor.center);
