@@ -13,15 +13,13 @@ class ShopGame extends FlameGame {
   late SpriteAnimation walkLeftAnimation;
   late SpriteAnimation walkRightAnimation;
   late SpriteAnimation idleAnimation;
-  late SpriteComponent background; // 👈 برای تعویض پس‌زمینه
 
   double playerX = 400;
   bool moveLeft = false;
   bool moveRight = false;
   bool isMoving = false;
 
-  // 🌟 وضعیت فعلی: 0 = خیابون اصلی، 1 = بهار، 2 = پونه‌زار، 3 = شاهد
-  int currentRegion = 0;
+  int currentRegion = 0; // 0 = خیابون اصلی، 1 = بهار، 2 = پونه‌زار، 3 = شاهد
 
   VoidCallback? onTaxiStandTap;
   VoidCallback? onBillboardTap;
@@ -42,23 +40,38 @@ class ShopGame extends FlameGame {
     currentRegion = regionId;
     playerX = 400;
 
-    if (regionId == 0) {
-      // 🌟 لود ۴ خیابون اصلی
-      for (int i = 0; i < mainStreets.length; i++) {
-        try {
-          final image = await images.load(mainStreets[i]);
-          double aspectRatio = image.height / image.width;
-          double finalHeight = singleAreaWidth * aspectRatio;
-          world.add(SpriteComponent(
-            sprite: Sprite(image),
-            size: Vector2(singleAreaWidth, finalHeight), 
-            position: Vector2(i * singleAreaWidth, 0), 
-            priority: -10,
-          ));
-        } catch (e) {
-          world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(i * singleAreaWidth, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
-        }
+    // 🌟 تابع کمکی برای لود عکس با حفظ نسبت ابعاد و چسبیدن به پایین صفحه
+    Future<void> addBackgroundImage(String imagePath, double xOffset) async {
+      try {
+        final image = await images.load(imagePath);
+        
+        // محاسبه ارتفاع بر اساس نسبت ابعاد اصلی عکس (بدون کشیدگی)
+        double aspectRatio = image.height / image.width;
+        double finalHeight = singleAreaWidth * aspectRatio;
+
+        world.add(SpriteComponent(
+          sprite: Sprite(image),
+          size: Vector2(singleAreaWidth, finalHeight), 
+          // 🌟 چسبیدن به پایین صفحه: ارتفاع عکس رو از پایین صفحه (size.y) کم می‌کنیم
+          position: Vector2(xOffset, size.y - finalHeight), 
+          priority: -10,
+        ));
+      } catch (e) {
+        debugPrint("عکس $imagePath پیدا نشد");
+        world.add(RectangleComponent(
+          size: Vector2(singleAreaWidth, size.y), 
+          position: Vector2(xOffset, 0), 
+          paint: Paint()..color = Colors.grey.shade800, 
+          priority: -10
+        ));
       }
+    }
+
+    if (regionId == 0) {
+      for (int i = 0; i < mainStreets.length; i++) {
+        await addBackgroundImage(mainStreets[i], i * singleAreaWidth);
+      }
+      
       // بیلبورد
       try {
         final billboardImage = await images.load('billboard_asset.png');
@@ -69,6 +82,7 @@ class ShopGame extends FlameGame {
           onTap: () => onBillboardTap?.call(),
         ));
       } catch (e) {}
+
       // ایستگاه تاکسی
       try {
         final taxiImage = await images.load('taxi_stand.png');
@@ -85,34 +99,22 @@ class ShopGame extends FlameGame {
           onTap: () => onTaxiStandTap?.call(),
         ));
       } catch (e) {}
+
     } 
     else if (regionId == 1) {
-      // 🌟 خیابون بهار
-      final image = await images.load('street_area_5.jpg');
-      double aspectRatio = image.height / image.width;
-      double finalHeight = singleAreaWidth * aspectRatio;
-      world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
-      // دکمه برگشت
+      await addBackgroundImage('street_area_5.jpg', 0);
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 2) {
-      // 🌟 خیابون پونه‌زار
-      final image = await images.load('street_area_6.png');
-      double aspectRatio = image.height / image.width;
-      double finalHeight = singleAreaWidth * aspectRatio;
-      world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+      await addBackgroundImage('street_area_6.png', 0);
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 3) {
-      // 🌟 خیابون شاهد
-      final image = await images.load('street_area_7.png');
-      double aspectRatio = image.height / image.width;
-      double finalHeight = singleAreaWidth * aspectRatio;
-      world.add(SpriteComponent(sprite: Sprite(image), size: Vector2(singleAreaWidth, finalHeight), position: Vector2(0, 0), priority: -10));
+      await addBackgroundImage('street_area_7.png', 0);
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
-    // 🌟 لود آرین (روی پیاده‌رو)
+    // 🌟 لود آرین (همیشه روی پیاده‌رو)
     try {
       final idleSprite = Sprite(await images.load('arian_idle.png'));
       final leftSprites = [Sprite(await images.load('arian_left_1.png')), Sprite(await images.load('arian_left_2.png')), Sprite(await images.load('arian_left_3.png')), Sprite(await images.load('arian_left_4.png'))];
@@ -127,10 +129,13 @@ class ShopGame extends FlameGame {
         size: Vector2(110, 170), 
         anchor: Anchor.bottomCenter,
       );
+      // 🌟 آرین ۸۰ پیکسل از پایین صفحه فاصله داره (که معمولاً روی پیاده‌رو هست)
       player.position = Vector2(playerX, size.y - 80); 
       player.priority = 10;
       world.add(player);
-    } catch (e) {}
+    } catch (e) {
+      debugPrint("عکس‌های آرین پیدا نشد: $e");
+    }
   }
 
   void goToRegion(int regionId) {
