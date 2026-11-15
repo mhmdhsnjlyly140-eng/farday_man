@@ -114,9 +114,8 @@ class ShopGame extends FlameGame {
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
     else if (regionId == 2) {
-      // ⚠️ تغییر تستی موقت: به جای street_area_6.png از street_area_1.png استفاده می‌کنیم
       try {
-        final image = await images.load('street_area_1.png');
+        final image = await images.load('street_area_6.jpeg');
         double finalHeight = size.y * 1.1; 
         world.add(SpriteComponent(
           sprite: Sprite(image), 
@@ -124,7 +123,7 @@ class ShopGame extends FlameGame {
           position: Vector2(0, 0), 
           priority: -10
         ));
-        debugPrint("✅ تست: پونه‌زار با street_area_1.png لود شد");
+        debugPrint("✅ پونه‌زار با street_area_6.jpeg لود شد");
       } catch (e) {
         world.add(RectangleComponent(
           size: Vector2(singleAreaWidth, size.y), 
@@ -132,7 +131,7 @@ class ShopGame extends FlameGame {
           paint: Paint()..color = Colors.brown.shade800, 
           priority: -10
         ));
-        debugPrint("❌ تست: حتی street_area_1.png هم لود نشد: $e");
+        debugPrint("❌ عکس پونه‌زار لود نشد: $e");
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
