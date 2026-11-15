@@ -73,7 +73,6 @@ class MainMenuScreen extends StatelessWidget {
   }
 }
 
-// 🌟 صفحه بازی
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
   @override
@@ -107,7 +106,6 @@ class _GameScreenState extends State<GameScreen> {
     } else { setState(() { showDialogue = false; }); }
   }
 
-  // 🌟 منوی تاکسی
   void _openTaxiMenu() {
     showDialog(
       context: context,
@@ -117,9 +115,9 @@ class _GameScreenState extends State<GameScreen> {
           title: const Text("تاکسی", style: TextStyle(color: Colors.amber)),
           content: const Text("به کجا می‌خوای بری؟ (هزینه: ۴۰,۰۰۰ تومان)", style: TextStyle(color: Colors.white)),
           actions: [
-            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(1); }, child: const Text("خیابان بهار (نانوایی و ساعت‌سازی)", style: TextStyle(color: Colors.white))),
-            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(2); }, child: const Text("خیابان پونه‌زار (مدرسه و کتابخانه)", style: TextStyle(color: Colors.white))),
-            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(3); }, child: const Text("خیابان شاهد (طلا فروشی، کافه، لباس)", style: TextStyle(color: Colors.white))),
+            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(1); }, child: const Text("خیابان بهار", style: TextStyle(color: Colors.white))),
+            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(2); }, child: const Text("خیابان پونه‌زار", style: TextStyle(color: Colors.white))),
+            TextButton(onPressed: () { Navigator.pop(context); _requestTaxi(3); }, child: const Text("خیابان شاهد", style: TextStyle(color: Colors.white))),
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("لغو", style: TextStyle(color: Colors.redAccent))),
           ],
         );
@@ -127,24 +125,20 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  // 🌟 درخواست تاکسی
   void _requestTaxi(int regionId) async {
     if (gameState.buyPersonal(40000)) {
-      // افکت محو شدن
       setState(() => showDialogue = false);
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 300));
       _game.goToRegion(regionId);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('پول کافی نداری!')));
     }
   }
 
-  // 🌟 بازگشت به خیابون اصلی
   void _returnToMainStreet() {
     _game.goToRegion(0);
   }
 
-  // 🌟 پنجره بیلبورد
   void _showBillboardInfo() {
     showDialog(
       context: context,
