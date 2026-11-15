@@ -25,6 +25,7 @@ class ShopGame extends FlameGame {
   VoidCallback? onBillboardTap;
   VoidCallback? onReturnToMainStreet;
 
+  // 🌟 ترتیب اصلی (۱ تا ۴)
   final List<String> mainStreets = [
     'street_area_1.png',
     'street_area_2.png',
@@ -61,30 +62,29 @@ class ShopGame extends FlameGame {
     }
 
     if (regionId == 0) {
-      // 🌟 چیدن از راست به چپ (برای جلوگیری از آینه شدن)
+      // 🌟 چیدن عکس‌ها از ۱ به ۴ (حالت اول)
       for (int i = 0; i < mainStreets.length; i++) {
-        int reverseIndex = (mainStreets.length - 1) - i;
-        await addBackgroundImage(mainStreets[reverseIndex], i * singleAreaWidth);
+        await addBackgroundImage(mainStreets[i], i * singleAreaWidth);
       }
       
-      // بیلبورد
+      // 🌟 بیلبورد (لبه پیاده‌رو)
       try {
         final billboardImage = await images.load('billboard_asset.png');
         world.add(BillboardComponent(
-          position: Vector2(600, size.y - 250),
+          position: Vector2(600, size.y - 200), // 👈 لبه پیاده‌رو
           size: Vector2(350, 200),
           image: billboardImage,
           onTap: () => onBillboardTap?.call(),
         ));
       } catch (e) {}
 
-      // ایستگاه تاکسی
+      // 🌟 ایستگاه تاکسی (لبه پیاده‌رو)
       try {
         final taxiImage = await images.load('taxi_stand.png');
         world.add(SpriteComponent(
           sprite: Sprite(taxiImage),
           size: Vector2(200, 250),
-          position: Vector2(1400, size.y - 20),
+          position: Vector2(1400, size.y - 20), // 👈 لبه پیاده‌رو
           anchor: Anchor.bottomCenter,
           priority: 15,
         ));
@@ -123,7 +123,7 @@ class ShopGame extends FlameGame {
         size: Vector2(110, 170), 
         anchor: Anchor.bottomCenter,
       );
-      player.position = Vector2(playerX, size.y - 80); 
+      player.position = Vector2(playerX, size.y - 80); // 👈 روی پیاده‌رو
       player.priority = 10;
       world.add(player);
     } catch (e) {
@@ -176,7 +176,7 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
   late TextComponent _textComponent;
 
   BillboardComponent({required Vector2 position, required Vector2 size, required this.image, required this.onTap}) 
-    : super(position: position, size: size, anchor: Anchor.topLeft, priority: 20);
+    : super(position: position, size: size, anchor: Anchor.bottomLeft, priority: 20); // 👈 anchor پایین
 
   @override
   Future<void> onLoad() async {
