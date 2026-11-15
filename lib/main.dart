@@ -171,9 +171,44 @@ class _GameScreenState extends State<GameScreen> {
             top: 20, right: 40,
             child: Row(
               children: [
-                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.redAccent, width: 1)), child: Row(children: [Image.asset('assets/images/icon_energy.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 18)), const SizedBox(width: 5), Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14))])),
+                // کیف پول (پول شخصی آرین)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.green, width: 1)),
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/icon_wallet.png', width: 22, height: 22, errorBuilder: (c,e,s) => const Icon(Icons.account_balance_wallet, color: Colors.green, size: 22)),
+                      const SizedBox(width: 5),
+                      Text('${gameState.arianMoney}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.amber, width: 1)), child: Row(children: [Image.asset('assets/images/icon_coin.png', width: 18, height: 18, errorBuilder: (c,e,s) => const Icon(Icons.star, color: Colors.amber, size: 18)), const SizedBox(width: 5), Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14))])),
+                // انرژی
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.redAccent, width: 1)),
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/icon_energy.png', width: 22, height: 22, errorBuilder: (c,e,s) => const Icon(Icons.favorite, color: Colors.redAccent, size: 22)),
+                      const SizedBox(width: 5),
+                      Text('${gameState.currentEnergy}/${gameState.maxEnergy}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // سکه‌ها
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.amber, width: 1)),
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/icon_coin.png', width: 22, height: 22, errorBuilder: (c,e,s) => const Icon(Icons.star, color: Colors.amber, size: 22)),
+                      const SizedBox(width: 5),
+                      Text('${gameState.coins}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
