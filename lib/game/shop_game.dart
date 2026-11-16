@@ -69,11 +69,9 @@ class ShopGame extends FlameGame {
       // 👇 اضافه کردن پیرمردهای رهگذر
       try {
         final walkImage = await images.load('old_man_walk.png');
-        // چون ۸ فریم داریم، عرض هر فریم = عرض کل / ۸
         double frameWidth = walkImage.width / 8.0;
         double frameHeight = walkImage.height.toDouble();
 
-        // برش فریم‌ها
         List<Sprite> walkSprites = [];
         for (int i = 0; i < 8; i++) {
           walkSprites.add(Sprite(
@@ -83,18 +81,17 @@ class ShopGame extends FlameGame {
           ));
         }
 
-        // انیمیشن راه رفتن
         final walkAnimation = SpriteAnimation.spriteList(walkSprites, stepTime: 0.15, loop: true);
 
-        // اضافه کردن ۳ پیرمرد با موقعیت و جهت تصادفی
         final random = Random();
         for (int i = 0; i < 3; i++) {
           world.add(PedestrianComponent(
+            game: this,
             animation: walkAnimation,
             startX: random.nextDouble() * worldWidth,
             speed: 30.0 + random.nextDouble() * 20.0, // بین ۳۰ تا ۵۰ پیکسل بر ثانیه
             goingRight: random.nextBool(),
-            yOffset: playerYOffset - 5, // کمی عقب‌تر از آرین برای لایه‌بندی بهتر
+            yOffset: playerYOffset,
           ));
         }
       } catch (e) {
@@ -251,21 +248,26 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 👇 کلاس جدید برای پیرمردهای رهگذر
+// 👇 کلاس جدید برای پیرمردهای رهگذر (اصلاح‌شده)
 class PedestrianComponent extends SpriteAnimationComponent {
-  final double startX;
+  final ShopGame game;
   final double speed;
   final bool goingRight;
-  final double yOffset;
 
   PedestrianComponent({
+    required this.game,
     required SpriteAnimation animation,
-    required this.startX,
+    required double startX,
     required this.speed,
     required this.goingRight,
-    required this.yOffset,
-  }) : super(animation: animation, anchor: Anchor.bottomCenter, priority: 5) {
-    position = Vector2(startX, size.y - yOffset); // ارتفاع خودکار از parent تنظیم میشه
+    required double yOffset,
+  }) : super(
+    animation: animation, 
+    size: Vector2(60, 120), // 👈 تنظیم سایز پیرمرد
+    anchor: Anchor.bottomCenter, 
+    priority: 5,
+    position: Vector2(startX, game.size.y - yOffset) // 👈 موقعیت اولیه
+  ) {
     if (!goingRight) {
       scale = Vector2(-1, 1); // آینه کردن برای رفتن به چپ
     }
@@ -276,13 +278,12 @@ class PedestrianComponent extends SpriteAnimationComponent {
     super.update(dt);
     double currentX = position.x;
     
-    // حرکت بر اساس جهت
     if (goingRight) {
       currentX += speed * dt;
-      if (currentX > 4000) currentX = -100; // وقتی از راست خارج شد، از چپ وارد شو
+      if (currentX > 4000) currentX = -100;
     } else {
       currentX -= speed * dt;
-      if (currentX < -100) currentX = 4000; // وقتی از چپ خارج شد، از راست وارد شو
+      if (currentX < -100) currentX = 4000;
     }
 
     position = Vector2(currentX, position.y);
