@@ -24,6 +24,8 @@ class ShopGame extends FlameGame {
   VoidCallback? onTaxiStandTap;
   VoidCallback? onBillboardTap;
   VoidCallback? onReturnToMainStreet;
+  VoidCallback? onShopTap; // 👈 دکمه مغازه
+  VoidCallback? onHomeTap; // 👈 دکمه خانه
 
   final List<String> mainStreets = [
     'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
@@ -64,6 +66,19 @@ class ShopGame extends FlameGame {
           world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(i * singleAreaWidth, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
         }
       }
+      
+      // دکمه ورود به مغازه (روی درب مغازه در منطقه ۱)
+      world.add(EnterButtonComponent(
+        position: Vector2(400, size.y - 200), 
+        onTap: () => onShopTap?.call()
+      ));
+
+      // دکمه ورود به خانه (در منطقه ۲ یا ۳ - اینجا در خیابان دوم می‌ذاریم)
+      world.add(EnterButtonComponent(
+        position: Vector2(2200, size.y - 200), 
+        onTap: () => onHomeTap?.call()
+      ));
+
       // بیلبورد
       try {
         final billboardImage = await images.load('billboard_asset.png');
@@ -74,6 +89,7 @@ class ShopGame extends FlameGame {
           onTap: () => onBillboardTap?.call(),
         ));
       } catch (e) {}
+      
       // ایستگاه تاکسی
       try {
         final taxiImage = await images.load('taxi_stand.png');
@@ -123,7 +139,6 @@ class ShopGame extends FlameGame {
           position: Vector2(0, 0), 
           priority: -10
         ));
-        debugPrint("✅ پونه‌زار با street_area_6.jpeg لود شد");
       } catch (e) {
         world.add(RectangleComponent(
           size: Vector2(singleAreaWidth, size.y), 
@@ -131,7 +146,6 @@ class ShopGame extends FlameGame {
           paint: Paint()..color = Colors.brown.shade800, 
           priority: -10
         ));
-        debugPrint("❌ عکس پونه‌زار لود نشد: $e");
       }
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
@@ -153,6 +167,13 @@ class ShopGame extends FlameGame {
           priority: -10
         ));
       }
+      
+      // دکمه ورود به خانه (در منطقه ۴ - خیابان خانه)
+      world.add(EnterButtonComponent(
+        position: Vector2(500, size.y - 200), 
+        onTap: () => onHomeTap?.call()
+      ));
+
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
