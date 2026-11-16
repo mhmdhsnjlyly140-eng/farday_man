@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/sprite.dart';
@@ -24,8 +25,6 @@ class ShopGame extends FlameGame {
   VoidCallback? onTaxiStandTap;
   VoidCallback? onBillboardTap;
   VoidCallback? onReturnToMainStreet;
-  VoidCallback? onShopTap; // 👈 دکمه مغازه
-  VoidCallback? onHomeTap; // 👈 دکمه خانه
 
   final List<String> mainStreets = [
     'street_area_1.png', 'street_area_2.png', 'street_area_3.png', 'street_area_4.png',
@@ -66,18 +65,41 @@ class ShopGame extends FlameGame {
           world.add(RectangleComponent(size: Vector2(singleAreaWidth, size.y), position: Vector2(i * singleAreaWidth, 0), paint: Paint()..color = Colors.grey.shade800, priority: -10));
         }
       }
-      
-      // دکمه ورود به مغازه (روی درب مغازه در منطقه ۱)
-      world.add(EnterButtonComponent(
-        position: Vector2(400, size.y - 200), 
-        onTap: () => onShopTap?.call()
-      ));
 
-      // دکمه ورود به خانه (در منطقه ۲ یا ۳ - اینجا در خیابان دوم می‌ذاریم)
-      world.add(EnterButtonComponent(
-        position: Vector2(2200, size.y - 200), 
-        onTap: () => onHomeTap?.call()
-      ));
+      // 👇 اضافه کردن پیرمردهای رهگذر
+      try {
+        final walkImage = await images.load('old_man_walk.png');
+        // چون ۸ فریم داریم، عرض هر فریم = عرض کل / ۸
+        double frameWidth = walkImage.width / 8.0;
+        double frameHeight = walkImage.height.toDouble();
+
+        // برش فریم‌ها
+        List<Sprite> walkSprites = [];
+        for (int i = 0; i < 8; i++) {
+          walkSprites.add(Sprite(
+            walkImage,
+            srcPosition: Vector2(i * frameWidth, 0),
+            srcSize: Vector2(frameWidth, frameHeight),
+          ));
+        }
+
+        // انیمیشن راه رفتن
+        final walkAnimation = SpriteAnimation.spriteList(walkSprites, stepTime: 0.15, loop: true);
+
+        // اضافه کردن ۳ پیرمرد با موقعیت و جهت تصادفی
+        final random = Random();
+        for (int i = 0; i < 3; i++) {
+          world.add(PedestrianComponent(
+            animation: walkAnimation,
+            startX: random.nextDouble() * worldWidth,
+            speed: 30.0 + random.nextDouble() * 20.0, // بین ۳۰ تا ۵۰ پیکسل بر ثانیه
+            goingRight: random.nextBool(),
+            yOffset: playerYOffset - 5, // کمی عقب‌تر از آرین برای لایه‌بندی بهتر
+          ));
+        }
+      } catch (e) {
+        debugPrint("عکس پیرمرد پیدا نشد: $e");
+      }
 
       // بیلبورد
       try {
@@ -167,13 +189,6 @@ class ShopGame extends FlameGame {
           priority: -10
         ));
       }
-      
-      // دکمه ورود به خانه (در منطقه ۴ - خیابان خانه)
-      world.add(EnterButtonComponent(
-        position: Vector2(500, size.y - 200), 
-        onTap: () => onHomeTap?.call()
-      ));
-
       world.add(EnterButtonComponent(position: Vector2(50, size.y - 160), onTap: () => onReturnToMainStreet?.call()));
     }
 
@@ -233,6 +248,44 @@ class ShopGame extends FlameGame {
     if (targetCameraX < 0) targetCameraX = 0;
     if (targetCameraX > maxX - size.x) targetCameraX = maxX - size.x;
     camera.viewfinder.position = Vector2(targetCameraX, 0);
+  }
+}
+
+// 👇 کلاس جدید برای پیرمردهای رهگذر
+class PedestrianComponent extends SpriteAnimationComponent {
+  final double startX;
+  final double speed;
+  final bool goingRight;
+  final double yOffset;
+
+  PedestrianComponent({
+    required SpriteAnimation animation,
+    required this.startX,
+    required this.speed,
+    required this.goingRight,
+    required this.yOffset,
+  }) : super(animation: animation, anchor: Anchor.bottomCenter, priority: 5) {
+    position = Vector2(startX, size.y - yOffset); // ارتفاع خودکار از parent تنظیم میشه
+    if (!goingRight) {
+      scale = Vector2(-1, 1); // آینه کردن برای رفتن به چپ
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    double currentX = position.x;
+    
+    // حرکت بر اساس جهت
+    if (goingRight) {
+      currentX += speed * dt;
+      if (currentX > 4000) currentX = -100; // وقتی از راست خارج شد، از چپ وارد شو
+    } else {
+      currentX -= speed * dt;
+      if (currentX < -100) currentX = 4000; // وقتی از چپ خارج شد، از راست وارد شو
+    }
+
+    position = Vector2(currentX, position.y);
   }
 }
 
