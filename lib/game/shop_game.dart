@@ -66,48 +66,54 @@ class ShopGame extends FlameGame {
         }
       }
 
-      // 👇 اضافه کردن پیرمردهای رهگذر
+      // 👇 پیرمردهای رهگذر (۳ فریم)
       try {
-        final walkImage = await images.load('old_man_walk.png');
-        double frameWidth = walkImage.width / 8.0;
-        double frameHeight = walkImage.height.toDouble();
-
         List<Sprite> walkSprites = [];
-        for (int i = 0; i < 8; i++) {
-          walkSprites.add(Sprite(
-            walkImage,
-            srcPosition: Vector2(i * frameWidth, 0),
-            srcSize: Vector2(frameWidth, frameHeight),
-          ));
+        for (int i = 1; i <= 3; i++) {
+          final image = await images.load('old_man_$i.png');
+          walkSprites.add(Sprite(image));
         }
-
-        final walkAnimation = SpriteAnimation.spriteList(walkSprites, stepTime: 0.15, loop: true);
+        
+        final walkAnimation = SpriteAnimation.spriteList(walkSprites, stepTime: 0.2, loop: true);
 
         final random = Random();
+        List<double> usedPositions = [];
         for (int i = 0; i < 3; i++) {
+          double startX;
+          int attempts = 0;
+          
+          do {
+            startX = random.nextDouble() * worldWidth;
+            attempts++;
+          } while (usedPositions.any((x) => (x - startX).abs() < 300) && attempts < 10);
+          
+          usedPositions.add(startX);
+
           world.add(PedestrianComponent(
             game: this,
             animation: walkAnimation,
-            startX: random.nextDouble() * worldWidth,
-            speed: 30.0 + random.nextDouble() * 20.0, // بین ۳۰ تا ۵۰ پیکسل بر ثانیه
+            startX: startX,
+            speed: 30.0 + random.nextDouble() * 20.0,
             goingRight: random.nextBool(),
             yOffset: playerYOffset,
           ));
         }
       } catch (e) {
-        debugPrint("عکس پیرمرد پیدا نشد: $e");
+        debugPrint("عکس‌های پیرمرد پیدا نشد: $e");
       }
 
-      // بیلبورد
+      // 👇 بیلبورد با کادر طلایی
       try {
-        final billboardImage = await images.load('billboard_asset.png');
+        final billboardImage = await images.load('billboard_bg.png');
         world.add(BillboardComponent(
           position: Vector2(600, size.y - 250),
           size: Vector2(350, 200),
           image: billboardImage,
           onTap: () => onBillboardTap?.call(),
         ));
-      } catch (e) {}
+      } catch (e) {
+        debugPrint("عکس بیلبورد پیدا نشد: $e");
+      }
       
       // ایستگاه تاکسی
       try {
@@ -248,7 +254,7 @@ class ShopGame extends FlameGame {
   }
 }
 
-// 👇 کلاس جدید برای پیرمردهای رهگذر (اصلاح‌شده)
+// 👇 کلاس پیرمردهای رهگذر
 class PedestrianComponent extends SpriteAnimationComponent {
   final ShopGame game;
   final double speed;
@@ -263,13 +269,13 @@ class PedestrianComponent extends SpriteAnimationComponent {
     required double yOffset,
   }) : super(
     animation: animation, 
-    size: Vector2(60, 120), // 👈 تنظیم سایز پیرمرد
+    size: Vector2(60, 120),
     anchor: Anchor.bottomCenter, 
     priority: 5,
-    position: Vector2(startX, game.size.y - yOffset) // 👈 موقعیت اولیه
+    position: Vector2(startX, game.size.y - yOffset)
   ) {
     if (!goingRight) {
-      scale = Vector2(-1, 1); // آینه کردن برای رفتن به چپ
+      scale = Vector2(-1, 1);
     }
   }
 
@@ -290,7 +296,7 @@ class PedestrianComponent extends SpriteAnimationComponent {
   }
 }
 
-// بیلبورد
+// 👇 بیلبورد با کادر طلایی و متن روی آن
 class BillboardComponent extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   final ui.Image image;
@@ -303,13 +309,15 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
+    // عکس کادر طلایی
     add(SpriteComponent(sprite: Sprite(image), size: size, anchor: Anchor.topLeft));
-    add(RectangleComponent(size: Vector2(size.x - 60, size.y - 70), position: Vector2(30, 35), paint: Paint()..color = Colors.black, priority: 1));
+    
+    // متن چشمک‌زن
     _textComponent = TextComponent(
       text: "این فضا برای\nتبلیغات شماست!",
       anchor: Anchor.center,
-      position: Vector2(size.x / 2, size.y / 2),
-      textRenderer: TextPaint(style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold)),
+      position: Vector2(size.x / 2, size.y / 2 + 5), 
+      textRenderer: TextPaint(style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
       priority: 2,
     );
     add(_textComponent);
@@ -325,7 +333,7 @@ class BillboardComponent extends PositionComponent with TapCallbacks {
       _textComponent.textRenderer = TextPaint(
         style: TextStyle(
           color: _isTextVisible ? Colors.amber : Colors.amber.withOpacity(0.2),
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       );
